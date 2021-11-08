@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  app:
+    build: ./docker/php
+    expose:
+      - 9000
+    volumes:
+      - ./app:/www
+    depends_on:
+      - db
+
+  web:
+    build: ./docker/ngnix
+    ports:
+      - 8000:8080
+    volumes:
+      - ./app:/www
+    depends_on:
+      - app
+
+  db:
+    build: ./docker/mysql
+    expose:
+      - 3306
+    env_file:
+      - ./docker/mysql/db.env
+    volumes:
+      - db-store:/var/lib/mysql
+
+volumes:
+  db-store:
