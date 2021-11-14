@@ -1,15 +1,21 @@
 <x-guest-layout>
     <x-auth-card>
+        @if (Route::has('admin.login'))
+        <div class="hidden fixed top-0 right-0 px-6 py-4 sm:block">
+            <a href="{{ route('admin.login') }}" class="text-sm text-gray-700 dark:text-gray-500 underline">Log in</a>
+        </div>
+        @endif
         <x-slot name="logo">
             <a href="/">
                 <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
             </a>
         </x-slot>
 
+        <h1>Register</h1>
         <!-- Validation Errors -->
         <x-auth-validation-errors class="mb-4" :errors="$errors" />
 
-        <form method="POST" action="{{ route('register') }}">
+        <form method="POST" action="{{ route('admin.register') }}">
             @csrf
 
             <!-- Name -->
@@ -46,7 +52,7 @@
             </div>
 
             <div class="flex items-center justify-end mt-4">
-                <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('login') }}">
+                <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('admin.login') }}">
                     {{ __('Already registered?') }}
                 </a>
 
