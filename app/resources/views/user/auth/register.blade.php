@@ -50,6 +50,15 @@
                                 name="password_confirmation" required />
             </div>
 
+            <!-- user create authentication key -->
+            <div class="mt-4">
+                <x-label for="create_authentication" value="user create authentication key" />
+
+                <x-input id="create_authentication" class="block mt-1 w-full"
+                                type="password"
+                                name="create_authentication" required />
+            </div>
+
             <div class="flex items-center justify-end mt-4">
                 <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('user.login') }}">
                     {{ __('Already registered?') }}
