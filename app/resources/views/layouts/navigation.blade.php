@@ -34,6 +34,9 @@
                     </x-slot>
 
                     <x-slot name="content">
+                        <x-dropdown-link :href="route('user.account', ['id' => Auth::user()->id])">
+                            アカウント情報
+                        </x-dropdown-link>
                         <!-- Authentication -->
                         <form method="POST" action="{{ route('user.logout') }}">
                             @csrf
@@ -77,6 +80,10 @@
 
             <div class="mt-3 space-y-1">
                 <!-- Authentication -->
+                <x-responsive-nav-link :href="route('user.account', ['id' =>  Auth::user()->id])">
+                    アカウント情報
+                </x-responsive-nav-link>
+
                 <form method="POST" action="{{ route('user.logout') }}">
                     @csrf
 
