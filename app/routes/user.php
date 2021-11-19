@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\User\Auth\EditUserInformationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,5 +19,9 @@ Route::group(['middleware' => 'auth:users'], function () {
     Route::get('/', function () {
         return view('user.dashboard');
     })->name('dashboard');
+
+    Route::get('/account/{id}', [EditUserInformationController::class, 'show'])->name('account');
+
+    Route::post('/account/{id}', [EditUserInformationController::class, 'edit'])->name('account');
 });
 require __DIR__ . '/auth.php';
