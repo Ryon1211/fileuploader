@@ -4,11 +4,13 @@ namespace App\Http\Controllers\User\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Notifications\RegisteredMailNotification;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class RegisteredUserController extends Controller
 {
@@ -39,6 +41,8 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+
+        $user->notify(new RegisteredMailNotification($user));
 
         Auth::login($user);
 
