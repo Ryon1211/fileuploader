@@ -24,6 +24,8 @@
             @include('layouts.admin-navigation')
         @elseif(auth('users')->user())
             @include('layouts.navigation')
+        @else
+            @include('layouts.guest-navigation')
         @endif
 
         <!-- Page Heading -->
