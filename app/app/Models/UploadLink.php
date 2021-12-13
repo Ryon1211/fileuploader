@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Upload;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,4 +18,9 @@ class UploadLink extends Model
         'message',
         'expire_date',
     ];
+
+    public function uploads()
+    {
+        return $this->hasOne(Upload::class, 'upload_link_id');
+    }
 }
