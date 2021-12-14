@@ -9,7 +9,7 @@
         <div class="sm:px-6 lg:px-8 mb-5 absolute inset-0 bg-gray-200	bg-opacity-75 transition duration-150 ease-in-out">
             <div class="max-w-7xl mx-auto bg-white shadow-sm sm:rounded-lg absolute top-2/4 left-2/4 transform -translate-y-1/2 -translate-x-1/2">
                 <span id="copy-message" class="invisible px-3 py-2 bg-blue-200 absolute top-2/4 left-2/4 transform -translate-y-1/2 -translate-x-1/2">
-                  コピーしました！
+                    コピーしました！
                 </span>
                 <div class="w-full p-6 bg-white border-b border-gray-200">
                     <div class="flex justify-end">
@@ -63,24 +63,21 @@
         </div>
     </div>
     <script>
-      let btn = document.querySelector('#copy-btn');
-      let text = document.querySelector('#copy-text');
-      let message = document.querySelector('#copy-message');
-      if(btn){
-        btn.addEventListener('click', () => {
-          let innerText = text.innerText;
+    let btn = document.querySelector('#copy-btn');
+    let text = document.querySelector('#copy-text');
+    let message = document.querySelector('#copy-message');
+    if(btn){
+    btn.addEventListener('click', () => {
+        let innerText = text.innerText;
 
-            if(navigator.clipboard){
-              navigator.clipboard.writeText(innerText);
-              message.classList.remove('invisible');
-              setTimeout(() =>{
-                    message.classList.add('invisible');
-              },3000);
-            }
-        });
-      }
+        if(navigator.clipboard){
+            navigator.clipboard.writeText(innerText);
+            message.classList.remove('invisible');
+            setTimeout(() =>{
+                message.classList.add('invisible');
+            },3000);
+        }
+    });
+    }
     </script>
-    <style>
-
-    </style>
 </x-app-layout>
