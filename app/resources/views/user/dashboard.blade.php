@@ -22,21 +22,26 @@
                     <ul>
                         @foreach ($upload_links as $upload_link)
                         <li class="pt-4 pb-3 list-none border-b border-gray-200 flex min-w-70rem hover:bg-gray-200">
-                            <div type="button" class="w-2/12 text-center">
-                                <x-upload-status class="upload-detail-btn" :uploadLink="$upload_link['upload_status']"></x-upload-status>
+                            <div class="w-2/12 ml-3">
+                                <x-upload-status
+                                type="button"
+                                class="upload-detail-btn" :uploadLink="$upload_link->uploads->upload_status ?? null"></x-upload-status>
                             </div>
-                            <div class="w-4/12 mx-2 break-words"> {{ $upload_link['title'] }}</div>
-                            <div class="w-2/12 text-center"> {{ $upload_link['created_at'] }}</div>
-                            <div class="w-2/12 text-center"> {{ $upload_link['expire_date'] }}</div>
+                            <div class="w-4/12 mx-2 break-words"> {{ $upload_link->message }}</div>
+                            <div class="w-2/12 text-center"> {{ $upload_link->created_at }}</div>
+                            <div class="w-2/12 text-center"> {{ $upload_link->expire_date }}</div>
                             <div class="w-1/12 text-center">
-                                <x-link-button type="button" class="copy-btn" data-src="{{ route('user.upload', ['key' => $upload_link['query']]) }}"></x-link-button>
+                                <x-link-button type="button" class="copy-btn" data-src="{{ route('user.upload', ['key' => $upload_link->query]) }}"></x-link-button>
                             </div>
                             <div class="w-1/12 text-center">
-                                <x-link-delete-button type="button" class="delete-btn" data-src="{{ route('user.upload', ['key' => $upload_link['query']]) }}"></x-link-delete-button>
+                                <x-link-delete-button type="button" class="delete-btn" data-src="{{ route('user.upload', ['key' => $upload_link->query]) }}"></x-link-delete-button>
                             </div>
                         </li>
                         @endforeach
                     </ul>
+                </div>
+                <div class="mt-6">
+                    {{$upload_links->links()}}
                 </div>
             </div>
         </div>
