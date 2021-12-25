@@ -13,7 +13,8 @@ services:
   web:
     build: ./docker/ngnix
     ports:
-      - 8000:8080
+      - 80:80
+      - 443:443
     volumes:
       - ./app:/www
     depends_on:
@@ -37,4 +38,5 @@ services:
       - web
 
 volumes:
+  conf-store:
   db-store:
