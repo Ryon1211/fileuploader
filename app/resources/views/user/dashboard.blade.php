@@ -24,8 +24,9 @@
                         <li class="pt-4 pb-3 list-none border-b border-gray-200 flex min-w-70rem hover:bg-gray-200">
                             <div class="w-2/12 ml-3">
                                 <x-upload-status
-                                type="button"
-                                class="upload-detail-btn" :uploadLink="$upload_link->uploads->upload_status ?? null"></x-upload-status>
+                                class="upload-detail-btn"
+                                :href="route('user.show.files', ['key' => $upload_link->query])"
+                                :uploadLink="$upload_link->upload->upload_status ?? null"></x-upload-status>
                             </div>
                             <div class="w-4/12 mx-2 break-words"> {{ $upload_link->message }}</div>
                             <div class="w-2/12 text-center"> {{ $upload_link->created_at }}</div>

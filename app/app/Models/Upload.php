@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\File;
+use App\Models\UploadLink as Link;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -37,5 +39,15 @@ class Upload extends Model
         }
 
         return $uploadStatus;
+    }
+
+    public function files()
+    {
+        return $this->hasMany(File::class);
+    }
+
+    public function uploadLink()
+    {
+        return $this->belongsTo(Link::class);
     }
 }

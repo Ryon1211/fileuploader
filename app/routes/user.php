@@ -1,8 +1,9 @@
 <?php
 
 use App\Http\Controllers\User\Auth\EditUserInformationController;
-use App\Http\Controllers\User\FileUploadController;
 use App\Http\Controllers\User\DashboardController;
+use App\Http\Controllers\User\FileUploadController;
+use App\Http\Controllers\User\FileDownloadController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -32,6 +33,9 @@ Route::group(['middleware' => 'auth:users'], function () {
 
     Route::post('/create/upload', [FileUploadController::class, 'createLink'])
         ->name('create.upload');
+
+    Route::get('/uploaded/{key}', [FileDownloadController::class, 'showFiles'])
+        ->name('show.files');
 });
 
 Route::get('/upload/{key}', [FileUploadController::class, 'showUploadForm'])
@@ -39,5 +43,8 @@ Route::get('/upload/{key}', [FileUploadController::class, 'showUploadForm'])
 
 Route::post('/upload/{key}', [FileUploadController::class, 'uploadFiles'])
     ->name('upload');
+
+Route::get('/download/file/{id}', [FileDownloadController::class, 'downloadFile'])
+    ->name('file.download');
 
 require __DIR__ . '/auth.php';
