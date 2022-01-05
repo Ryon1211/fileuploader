@@ -36,6 +36,18 @@ Route::group(['middleware' => 'auth:users'], function () {
 
     Route::get('/uploaded/{key}', [FileDownloadController::class, 'showFiles'])
         ->name('show.files');
+
+    Route::get('/create/download/', [FileDownloadController::class, 'showCreateForm'])
+        ->name('create.download');
+
+    Route::post('/create/download/', [FileDownloadController::class, 'showCreateForm'])
+        ->name('create.download');
+
+    Route::post('/create/download/check', [FileDownloadController::class, 'checkBeforeCreateLink'])
+        ->name('create.download.check');
+
+    Route::post('/create/download/link', [FileDownloadController::class, 'createLink'])
+        ->name('create.download.link');
 });
 
 Route::get('/upload/{key}', [FileUploadController::class, 'showUploadForm'])
@@ -44,7 +56,10 @@ Route::get('/upload/{key}', [FileUploadController::class, 'showUploadForm'])
 Route::post('/upload/{key}', [FileUploadController::class, 'uploadFiles'])
     ->name('upload');
 
-Route::get('/download/file/{id}', [FileDownloadController::class, 'downloadFile'])
+Route::get('/download/{key}', [FileDownloadController::class, 'showDownload'])
+    ->name('download');
+
+Route::post('/download/file', [FileDownloadController::class, 'downloadFile'])
     ->name('file.download');
 
 require __DIR__ . '/auth.php';

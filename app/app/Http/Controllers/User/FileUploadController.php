@@ -9,7 +9,6 @@ use App\Models\File;
 use App\Models\Upload;
 use App\Models\UploadLink;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -30,7 +29,7 @@ class FileUploadController extends Controller
 
     public function showCreateForm()
     {
-        return view('user.create-link', ['options' => self::OPTIONS]);
+        return view('user.create-upload-link', ['options' => self::OPTIONS]);
     }
 
     public function createLink(UploadLinkRequest $request)
@@ -102,8 +101,6 @@ class FileUploadController extends Controller
         $message = $request->message;
         $expireDate = $this->generateExpireDatetime($request->expire_date);
         $files = $request->file('file');
-
-        // dd($request->all());
 
         // database Uploadに情報を登録
         $upload = Upload::create([
