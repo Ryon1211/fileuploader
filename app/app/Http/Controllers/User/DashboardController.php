@@ -10,9 +10,9 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $uploadLinks = Link::with('uploads')
+        $uploadLinks = Link::with('upload')
             ->where('user_id', Auth::user()->id)
-            ->paginate(5);
+            ->paginate(10);
 
         return view('user.dashboard', [
             'upload_links' => $uploadLinks,

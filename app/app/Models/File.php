@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Upload;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,4 +20,9 @@ class File extends Model
         'type',
         'size'
     ];
+
+    public function upload()
+    {
+        return $this->belongsTo(Upload::class);
+    }
 }

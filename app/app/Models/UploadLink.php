@@ -19,8 +19,8 @@ class UploadLink extends Model
         'expire_date',
     ];
 
-    public function uploads()
+    public function upload()
     {
-        return $this->hasOne(Upload::class, 'upload_link_id');
+        return $this->hasOne(Upload::class, 'upload_link_id', 'id');
     }
 }
