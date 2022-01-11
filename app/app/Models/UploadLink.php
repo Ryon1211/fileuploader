@@ -21,6 +21,6 @@ class UploadLink extends Model
 
     public function upload()
     {
-        return $this->hasOne(Upload::class, 'upload_link_id', 'id');
+        return $this->hasOne(Upload::class);
     }
 }

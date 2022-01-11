@@ -2,24 +2,23 @@
 
 namespace App\Models;
 
-use App\Models\Download;
+use App\Models\File;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class DownloadLink extends Model
+class Download extends Model
 {
     use HasFactory;
 
     const UPDATED_AT = null;
 
     protected $fillable = [
-        'upload_link_id',
-        'query',
-        'expire_date',
+        'download_link_id',
+        'file_id',
     ];
 
-    public function download()
+    public function file()
     {
-        return $this->hasMany(Download::class);
+        return $this->belongsTo(File::class);
     }
 }
