@@ -29,7 +29,7 @@
                         <x-label for="expire_date" value="選択したファイル" />
                         @php($i = 1)
                         @foreach($files as $file)
-                        <x-input type="hidden" name="file[]" value="{{ $file->id }}" required />
+                        <x-input type="hidden" name="file[]" value="{{ $file->file_id }}" required />
                         {{-- <x-input type="hidden" name="file[]" value="6" required /> --}}
 
                         <div class="my-2">
