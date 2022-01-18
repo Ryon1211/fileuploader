@@ -8,7 +8,7 @@
     <div class="absolute inset-0" x-data="{ modalOpen: true }" x-show="modalOpen">
         <div class="sm:px-6 lg:px-8 mb-5 absolute inset-0 bg-gray-200	bg-opacity-75 transition duration-150 ease-in-out">
             <div class="max-w-7xl mx-auto bg-white shadow-sm sm:rounded-lg absolute top-2/4 left-2/4 transform -translate-y-1/2 -translate-x-1/2">
-                <span id="copy-message" class="invisible px-3 py-2 bg-blue-200 absolute top-2/4 left-2/4 transform -translate-y-1/2 -translate-x-1/2">
+                <span id="copy_message" class="invisible px-3 py-2 bg-blue-200 absolute top-2/4 left-2/4 transform -translate-y-1/2 -translate-x-1/2">
                     コピーしました！
                 </span>
                 <div class="w-full p-6 bg-white border-b border-gray-200">
@@ -20,8 +20,8 @@
                         </button>
                     </div>
                     <div>ダウンロードリンクを新規作成しました。</div>
-                    <span id="copy-text">{{ session('downloadUrl') }}</span>
-                    <x-button class="ml-4" id="copy-btn">
+                    <span id="copy_text">{{ session('downloadUrl') }}</span>
+                    <x-button class="ml-4" id="copy_btn">
                         コピー
                     </x-button>
                 </div>

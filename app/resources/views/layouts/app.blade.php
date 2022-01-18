@@ -19,7 +19,7 @@
 </head>
 
 <body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-100">
+    <div class="min-h-screen bg-gray-100 relative">
         @if(auth('admins')->user())
             @include('layouts.admin-navigation')
         @elseif(auth('users')->user())

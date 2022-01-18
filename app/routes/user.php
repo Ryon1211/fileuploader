@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\User\Auth\EditUserInformationController;
 use App\Http\Controllers\User\DashboardController;
+use App\Http\Controllers\User\DeleteController;
 use App\Http\Controllers\User\FileUploadController;
 use App\Http\Controllers\User\FileDownloadController;
 use Illuminate\Support\Facades\Auth;
@@ -37,10 +38,10 @@ Route::group(['middleware' => 'auth:users'], function () {
     Route::get('/uploaded/{key}', [FileDownloadController::class, 'showFiles'])
         ->name('show.files');
 
-    Route::get('/create/download/', [FileDownloadController::class, 'showCreateForm'])
+    Route::get('/create/download', [FileDownloadController::class, 'showCreateForm'])
         ->name('create.download');
 
-    Route::post('/create/download/', [FileDownloadController::class, 'showCreateForm'])
+    Route::post('/create/download', [FileDownloadController::class, 'showCreateForm'])
         ->name('create.download');
 
     Route::post('/create/download/check', [FileDownloadController::class, 'checkBeforeCreateLink'])
@@ -48,6 +49,15 @@ Route::group(['middleware' => 'auth:users'], function () {
 
     Route::post('/create/download/link', [FileDownloadController::class, 'createLink'])
         ->name('create.download.link');
+
+    Route::post('/delete/file', [DeleteController::class, 'deleteFile'])
+        ->name('delete.file');
+
+    Route::post('/delete/upload', [DeleteController::class, 'deleteUploadLink'])
+        ->name('delete.upload');
+
+    Route::post('/delete/download', [DeleteController::class, 'deleteDownloadLink'])
+        ->name('delete.download');
 });
 
 Route::get('/upload/{key}', [FileUploadController::class, 'showUploadForm'])

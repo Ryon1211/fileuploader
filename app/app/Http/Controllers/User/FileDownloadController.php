@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Download;
 use App\Models\File;
 use App\Models\DownloadLink;
 use App\Models\UploadLink;
@@ -29,40 +30,40 @@ class FileDownloadController extends Controller
 
     public function showCreateForm(Request $request)
     {
-        $fileIds = $request->id;
-        $files = [];
-        $status = false;
+        $fileIds = $request->id ?? [];
         $options = self::OPTIONS;
 
-        if (!empty($fileIds)) {
-            foreach ($fileIds as $id) {
-                $fileInfo = $this->getFileInfo((int)$id);
-                $upload = $fileInfo->upload;
-                $userId = $upload->uploadLink->user_id ?? 0;
-                $expiredDate = $this->checkExpireDate($upload->expire_date);
-
-                // fileの期限を確認
-                if ($expiredDate && $this->checkAuthUserEqCreateUser($userId)) {
-                    $files[] = $fileInfo;
+        $files = File::join('uploads', 'uploads.id', '=', 'files.upload_id')
+            ->join('upload_links', 'upload_links.id', '=', 'uploads.upload_link_id')
+            ->whereIn('files.id', $fileIds)
+            ->where('upload_links.user_id', Auth::user()->id)
+            ->where(
+                function ($query) {
+                    $query->orWhere('uploads.expire_date', '>=', date('Y-m-d H:i:s'))
+                        ->orWhere('uploads.expire_date', null);
                 }
-            }
+            )
+            ->select(
+                'files.id as file_id',
+                'files.name',
+                'files.type',
+                'uploads.expire_date',
+                'upload_links.user_id'
+            )
+            ->orderBy('file_id', 'asc')
+            ->get();
 
-            if (count($fileIds) === count($files)) {
-                $status = true;
-            }
+        $status = count($fileIds) === count($files);
 
-            if ($upload->expire_date !== null) {
-                $nowDate = Carbon::now();
-                $targetDate = Carbon::parse($upload->expire_date);
-                $diffDate = $nowDate->diffInDays($targetDate);
+        if (!empty($fileIds) && $files[0]->expire_date !== null) {
+            $nowDate = Carbon::now();
+            $targetDate = Carbon::parse($files[0]->expire_date->expire_date);
+            $diffDate = $nowDate->diffInDays($targetDate);
 
-                $options = [
-                    $upload->expire_date => 'ファイルの有効期限まで',
-                ];
-                foreach (self::OPTIONS as $key => $val) {
-                    if ((int)$key <= $diffDate && (int)$key !== 0) {
-                        $options[$key] = $val;
-                    }
+            $options = [$files[0]->expire_date => 'ファイルの有効期限まで'];
+            foreach (self::OPTIONS as $key => $val) {
+                if ((int)$key <= $diffDate && (int)$key !== 0) {
+                    $options[$key] = $val;
                 }
             }
         }
@@ -129,7 +130,6 @@ class FileDownloadController extends Controller
         if (0 < $requestFileLength) {
             // DB処理
             foreach ($fileIds as $id) {
-                // dd($request, $expireDate, $requestFileLength);
                 $fileInfo = $this->getFileInfo((int)$id);
                 $permission = false;
                 // if ファイルが存在しているか
@@ -139,19 +139,22 @@ class FileDownloadController extends Controller
                     $fileExpireDate = $upload->expire_date ?? 0;
                 }
 
-
                 // if ファイルがアップロードされる際に使われたリンク作成したユーザーなのか
-                if ($permission) {
-                    if ($this->checkExpireDate($fileExpireDate)) {
-                        //  ダウンロードリンク作成
-                        DownloadLink::create([
-                            'user_id' => Auth::user()->id,
-                            'file_id' => $id,
+                if ($permission && $this->checkExpireDate($fileExpireDate)) {
+                    //  ダウンロードリンク作成
+                    if (!$fileCount) {
+                        $download_link = DownloadLink::create([
+                            'upload_link_id' => $upload->uploadLink->id,
                             'query' => $key,
                             'expire_date' => $expireDate,
                         ]);
-                        $fileCount++;
                     }
+
+                    Download::create([
+                        'download_link_id' => $download_link->id,
+                        'file_id' => $id,
+                    ]);
+                    $fileCount++;
                 }
             }
 
@@ -171,34 +174,40 @@ class FileDownloadController extends Controller
     public function showFiles(string $key)
     {
         // file一覧を取得する
-        $link = UploadLink::where('query', $key)->first();
-        $upload = $link->upload()->where('upload_link_id', $link->id)->first();
-        $files = $upload->files()->get();
-
+        $link = UploadLink::with('upload.files')->where('query', $key)->first();
+        // upload_link_idに紐付いたレコードかつ有効期銀内のデータのみ取得する
+        $downloads = DownloadLink::with('download.file')
+            ->where('upload_link_id', $link->id)
+            ->where(
+                function ($query) {
+                    $query->orWhere('expire_date', '>=', date('Y-m-d H:i:s'))
+                        ->orWhere('expire_date', null);
+                }
+            )->paginate(5);
 
         // 有効期限内であればダウンロードできるようにする
-        $expireStatus = $this->checkExpireDate($upload->expire_date);
-        $expiredDate = $this->formatShowExpireDatetime($upload->expire_date) ?? '期限なし';
+        $expireStatus = $this->checkExpireDate($link->upload->expire_date);
+        $expiredDate = $this->formatShowExpireDatetime($link->upload->expire_date) ?? '期限なし';
 
         return view('user.upload-detail', [
-            'upload' => $upload,
-            'files' => $files,
+            'upload' => $link->upload,
             'expire_status' => $expireStatus,
             'expire_date' => $expiredDate,
+            'download_links' => $downloads,
         ]);
     }
 
     public function showDownload(string $key)
     {
         // file一覧を取得する
-        $links = DownloadLink::with('file.upload')->where('query', $key)->get();
+        $links = DownloadLink::with('download.file.upload.uploadLink')->where('query', $key)->get();
         // 有効期限内であればダウンロードできるようにする
         $expireStatus = $this->checkExpireDate($links[0]->expire_date);
         $expiredDate = $this->formatShowExpireDatetime($links[0]->expire_date) ?? '期限なし';
 
         return view('user.download', [
-            'upload' => $links[0]->file->upload,
-            'files' => $links,
+            'upload' => $links[0]->download[0],
+            'files' => $links[0]->download,
             'expire_status' => $expireStatus,
             'expire_date' => $expiredDate,
         ]);
