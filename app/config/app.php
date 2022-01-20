@@ -229,6 +229,9 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
 
+        // Constants
+        'DateOptionsConstants' => App\Constants\DateOptions::class,
+        'MessageConstants' => App\Constants\Messages::class,
     ],
 
 ];

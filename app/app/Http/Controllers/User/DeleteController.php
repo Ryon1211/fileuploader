@@ -11,12 +11,6 @@ use Illuminate\Http\Request;
 
 class DeleteController extends Controller
 {
-    private const MESSAGE = [
-        'expired' => 'ファイルの有効期限が切れています。',
-        'notFound' => 'ファイルが指定されていないか、存在していません。',
-    ];
-
-
     public function deleteFile(Request $request)
     {
         foreach ($request->id as $id) {
@@ -25,7 +19,7 @@ class DeleteController extends Controller
             $userId = $file->upload->uploadLink->user_id;
 
             if ($file && $userId !== Auth::user()->id) {
-                return back()->withErrors(['error' => self::MESSAGE['notFound']]);
+                return back()->withErrors(['error' => \MessageConstants::ERROR['fileNotFound']]);
             }
 
             $file->delete();
@@ -37,7 +31,7 @@ class DeleteController extends Controller
             return redirect()->route('user.dashboard');
         }
 
-        return back()->withErrors(['error' => 'ファイルを削除しました']);
+        return back()->withErrors(['error' => \MessageConstants::SUCCESS['fileDeleted']]);
     }
 
     public function deleteUploadLink(Request $request)
@@ -52,7 +46,7 @@ class DeleteController extends Controller
         }
 
         return redirect()->route('user.dashboard')
-            ->withErrors(['error' => 'リンクが存在しません']);
+            ->withErrors(['error' => \MessageConstants::ERROR['linkNotFound']]);
     }
 
     public function deleteDownloadLink(Request $request)
@@ -63,17 +57,17 @@ class DeleteController extends Controller
 
         // Linkの存在を確認して、userの権限を確認
         if (!empty($downloadLinks->items)) {
-            return back()->withErrors(['error' => self::MESSAGE['notFound']]);
+            return back()->withErrors(['error' => \MessageConstants::ERROR['fileNotFound']]);
         }
 
         foreach ($userIds as $id) {
             if ($id !== Auth::user()->id) {
-                return back()->withErrors(['error' => self::MESSAGE['notFound']]);
+                return back()->withErrors(['error' => \MessageConstants::ERROR['fileNotFound']]);
             }
         }
 
         $downloadLinks->each(fn ($downloadLink) => $downloadLink->delete());
 
-        return back()->withErrors(['error' => 'ファイルを削除しました']);
+        return back()->withErrors(['error' => \MessageConstants::SUCCESS['fileDeleted']]);
     }
 }

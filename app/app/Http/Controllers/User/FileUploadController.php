@@ -14,22 +14,9 @@ use Illuminate\Support\Str;
 
 class FileUploadController extends Controller
 {
-    private const MESSAGE = [
-        'expired' => 'リンクがの有効期限が切れています。',
-        'disabled' => 'リンクが無効または存在しません。',
-    ];
-
-    private const OPTIONS = [
-        '0' => '期限なし',
-        '7' => '7日',
-        '5' => '5日',
-        '3' => '3日',
-        '1' => '1日',
-    ];
-
     public function showCreateForm()
     {
-        return view('user.create-upload-link', ['options' => self::OPTIONS]);
+        return view('user.create-upload-link', ['options' => \DateOptionsConstants::EXPIRE_OPTIONS]);
     }
 
     public function createLink(UploadLinkRequest $request)
@@ -51,7 +38,7 @@ class FileUploadController extends Controller
 
         return redirect()
             ->route('user.create.upload')
-            ->with('options', self::OPTIONS);
+            ->with('options', \DateOptionsConstants::EXPIRE_OPTIONS);
     }
 
     public function showUploadForm(string $key)
@@ -67,7 +54,7 @@ class FileUploadController extends Controller
             $formExpired = $this->checkExpireDate($link->expire_date);
             if ($formExpired) {
                 $showForm = $formExpired;
-                $message = self::MESSAGE['expired'];
+                $message = \MessageConstants::ERROR['linkExpired'];
             }
             // linkの有効性を確認(過去のアップロード) & アップロード済みのファイル名を表示
             $upload = Upload::where('upload_link_id', $link->id)->first();
@@ -76,16 +63,16 @@ class FileUploadController extends Controller
                 $uploadInformation = $upload;
                 $uploadInformation['expire_date'] =
                     $this->formatShowExpireDatetime($upload->expire_date)
-                    ?? self::OPTIONS['0'];
+                    ?? \DateOptionsConstants::EXPIRE_OPTIONS['0'];
                 $filesInformation = $files;
                 $showForm = false;
             }
         } else {
-            $message = self::MESSAGE['disabled'];
+            $message = \MessageConstants::ERROR['linkDisabled'];
         }
 
         return view('user.upload', [
-            'options' => self::OPTIONS,
+            'options' => \DateOptionsConstants::EXPIRE_OPTIONS,
             'showForm' => $showForm,
             'query' => $key,
             'upload_information' => $uploadInformation,

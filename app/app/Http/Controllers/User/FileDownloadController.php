@@ -15,23 +15,10 @@ use Illuminate\Support\Str;
 
 class FileDownloadController extends Controller
 {
-    private const MESSAGE = [
-        'expired' => 'ファイルの有効期限が切れています。',
-        'notFound' => 'ファイルが指定されていないか、存在していません。',
-    ];
-
-    private const OPTIONS = [
-        '0' => '期限なし',
-        '7' => '7日',
-        '5' => '5日',
-        '3' => '3日',
-        '1' => '1日',
-    ];
-
     public function showCreateForm(Request $request)
     {
         $fileIds = $request->id ?? [];
-        $options = self::OPTIONS;
+        $options = \DateOptionsConstants::EXPIRE_OPTIONS;
 
         $files = File::join('uploads', 'uploads.id', '=', 'files.upload_id')
             ->join('upload_links', 'upload_links.id', '=', 'uploads.upload_link_id')
@@ -61,7 +48,7 @@ class FileDownloadController extends Controller
             $diffDate = $nowDate->diffInDays($targetDate);
 
             $options = [$files[0]->expire_date => 'ファイルの有効期限まで'];
-            foreach (self::OPTIONS as $key => $val) {
+            foreach (\DateOptionsConstants::EXPIRE_OPTIONS as $key => $val) {
                 if ((int)$key <= $diffDate && (int)$key !== 0) {
                     $options[$key] = $val;
                 }
@@ -104,7 +91,7 @@ class FileDownloadController extends Controller
                         $fileCount++;
                     } else {
                         return response()
-                            ->json(['message' =>  self::MESSAGE['expired']], 404);
+                            ->json(['message' =>  \MessageConstants::ERROR['fileExpired']], 404);
                     }
                 }
             }
@@ -115,7 +102,7 @@ class FileDownloadController extends Controller
         }
 
         return response()
-            ->json(['message' =>  self::MESSAGE['notFound']], 404);
+            ->json(['message' =>  \MessageConstants::ERROR['fileNotFound']], 404);
     }
 
     public function createLink(Request $request)
@@ -246,7 +233,7 @@ class FileDownloadController extends Controller
                     );
                 }
                 return response()
-                    ->json(['message' =>  self::MESSAGE['expired']], 404);
+                    ->json(['message' =>  \MessageConstants::ERROR['fileExpired']], 404);
             }
         }
 
@@ -283,7 +270,7 @@ class FileDownloadController extends Controller
                         $fileCount++;
                     } else {
                         return response()
-                            ->json(['message' =>  self::MESSAGE['expired']], 404);
+                            ->json(['message' =>  \MessageConstants::ERROR['fileExpired']], 404);
                     }
                 }
             }
@@ -302,7 +289,7 @@ class FileDownloadController extends Controller
         }
 
         return response()
-            ->json(['message' =>  self::MESSAGE['notFound']], 404);
+            ->json(['message' =>  \MessageConstants::ERROR['fileNotFound']], 404);
     }
 
     private function getFileInfo(int $id): File | bool
@@ -333,7 +320,7 @@ class FileDownloadController extends Controller
 
     private function generateExpireDatetime(?string $date): ?string
     {
-        if (array_key_exists($date, self::OPTIONS)) {
+        if (array_key_exists($date, \DateOptionsConstants::EXPIRE_OPTIONS)) {
             return $date ? Carbon::now()->addDay($date) : null;
         }
 
