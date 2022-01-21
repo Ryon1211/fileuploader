@@ -13,15 +13,18 @@ class DeleteController extends Controller
 {
     public function deleteFile(Request $request)
     {
-        foreach ($request->id as $id) {
-            $file = File::with('upload.uploadLink')->find($id);
+        $files = File::with('upload.uploadLink')
+            ->whereIn('id', $request->id)
+            ->whereHas('upload.uploadLink', function ($query) {
+                $query->where('user_id', Auth::user()->id);
+            })->get();
+
+        if (!empty($files->items)) {
+            return back()->withErrors(['error' => \MessageConstants::ERROR['fileNotFound']]);
+        }
+
+        foreach ($files as $file) {
             $uploadId = $file->upload->id;
-            $userId = $file->upload->uploadLink->user_id;
-
-            if ($file && $userId !== Auth::user()->id) {
-                return back()->withErrors(['error' => \MessageConstants::ERROR['fileNotFound']]);
-            }
-
             $file->delete();
         }
 
@@ -52,18 +55,14 @@ class DeleteController extends Controller
     public function deleteDownloadLink(Request $request)
     {
         $downloadLinks = DownloadLink::with('uploadLink')
-            ->whereIn('id', $request->id)->get();
-        $userIds = $downloadLinks->pluck('uploadLink.user_id');
+            ->whereIn('id', $request->id)
+            ->whereHas('uploadLink', function ($query) {
+                $query->where('user_id', Auth::user()->id);
+            })->get();
 
         // Linkの存在を確認して、userの権限を確認
         if (!empty($downloadLinks->items)) {
             return back()->withErrors(['error' => \MessageConstants::ERROR['fileNotFound']]);
-        }
-
-        foreach ($userIds as $id) {
-            if ($id !== Auth::user()->id) {
-                return back()->withErrors(['error' => \MessageConstants::ERROR['fileNotFound']]);
-            }
         }
 
         $downloadLinks->each(fn ($downloadLink) => $downloadLink->delete());
