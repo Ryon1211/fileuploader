@@ -16,21 +16,21 @@ class FileUploadController extends Controller
 {
     public function showCreateForm()
     {
-        return view('user.create-upload-link', ['options' => \DateOptionsConstants::EXPIRE_OPTIONS]);
+        return view(
+            'user.create-upload-link',
+            ['options' => \DateOptionsConstants::EXPIRE_OPTIONS]
+        );
     }
 
     public function createLink(UploadLinkRequest $request)
     {
         $key = Str::random(20);
 
-        $expireDate = $this->generateExpireDatetime($request->expire_date);
-
-        // DB処理
         UploadLink::create([
             'user_id' => Auth::user()->id,
             'query' => $key,
             'message' => $request->message,
-            'expire_date' => $expireDate,
+            'expire_date' => $this->generateExpireDatetime($request->expire_date),
         ]);
 
         // URL生成しユーザーに通知
@@ -83,21 +83,15 @@ class FileUploadController extends Controller
 
     public function uploadFiles(UploadFilesRequest $request, string $key)
     {
-        $linkId = UploadLink::where('query', $key)->first()->id;
-        $sender = $request->sender;
-        $message = $request->message;
-        $expireDate = $this->generateExpireDatetime($request->expire_date);
-        $files = $request->file('file');
-
         // database Uploadに情報を登録
         $upload = Upload::create([
-            'upload_link_id' => $linkId,
-            'sender' => $sender,
-            'message' => $message,
-            'expire_date' => $expireDate,
+            'upload_link_id' => UploadLink::where('query', $key)->first()->id,
+            'sender' => $request->sender,
+            'message' => $request->message,
+            'expire_date' => $this->generateExpireDatetime($request->expire_date),
         ]);
 
-        foreach ($files as $file) {
+        foreach ($request->file('file') as $file) {
             $originalName = $file->getClientOriginalName();
             $mimeType = $file->getMimeType();
             $fileSize = $file->getSize();

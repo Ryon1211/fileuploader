@@ -19,7 +19,7 @@ class DeleteController extends Controller
                 $query->where('user_id', Auth::user()->id);
             })->get();
 
-        if (!empty($files->items)) {
+        if ($files->isEmpty()) {
             return back()->withErrors(['error' => \MessageConstants::ERROR['fileNotFound']]);
         }
 
@@ -42,7 +42,7 @@ class DeleteController extends Controller
         $uploadLinks = UploadLink::whereIn('id', $request->id)
             ->where('user_id', Auth::user()->id)->get();
 
-        if (empty($uploadLinks->items)) {
+        if ($uploadLinks->isEmpty()) {
             $uploadLinks->each(fn ($uploadLink) => $uploadLink->delete());
 
             return redirect()->route('user.dashboard');
@@ -61,7 +61,7 @@ class DeleteController extends Controller
             })->get();
 
         // Linkの存在を確認して、userの権限を確認
-        if (!empty($downloadLinks->items)) {
+        if ($downloadLinks->isEmpty()) {
             return back()->withErrors(['error' => \MessageConstants::ERROR['fileNotFound']]);
         }
 

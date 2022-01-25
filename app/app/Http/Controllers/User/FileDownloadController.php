@@ -20,34 +20,23 @@ class FileDownloadController extends Controller
         $fileIds = $request->id ?? [];
         $options = \DateOptionsConstants::EXPIRE_OPTIONS;
 
-        $files = File::join('uploads', 'uploads.id', '=', 'files.upload_id')
-            ->join('upload_links', 'upload_links.id', '=', 'uploads.upload_link_id')
-            ->whereIn('files.id', $fileIds)
-            ->where('upload_links.user_id', Auth::user()->id)
-            ->where(
-                function ($query) {
-                    $query->orWhere('uploads.expire_date', '>=', date('Y-m-d H:i:s'))
-                        ->orWhere('uploads.expire_date', null);
-                }
-            )
-            ->select(
-                'files.id as file_id',
-                'files.name',
-                'files.type',
-                'uploads.expire_date',
-                'upload_links.user_id'
-            )
-            ->orderBy('file_id', 'asc')
-            ->get();
+        $files = File::with('upload.uploadLink')
+            ->whereIn('id', $fileIds)
+            ->whereHas('upload.uploadLink', function ($query) {
+                $query->where('user_id', Auth::user()->id);
+            })
+            ->whereHas('upload', function ($query) {
+                $query->orWhere('uploads.expire_date', '>=', date('Y-m-d H:i:s'))
+                    ->orWhere('uploads.expire_date', null);
+            })->get();
 
-        $status = count($fileIds) === count($files);
+        $fileExists = !$files->isEmpty();
 
-        if (!empty($fileIds) && $files[0]->expire_date !== null) {
-            $nowDate = Carbon::now();
-            $targetDate = Carbon::parse($files[0]->expire_date->expire_date);
-            $diffDate = $nowDate->diffInDays($targetDate);
+        if ($fileExists && $files[0]->upload->expire_date !== null) {
+            $targetDate = Carbon::parse($files[0]->upload->expire_date);
+            $diffDate = Carbon::now()->diffInDays($targetDate);
 
-            $options = [$files[0]->expire_date => 'ファイルの有効期限まで'];
+            $options = [$files[0]->upload->expire_date => 'ファイルの有効期限まで'];
             foreach (\DateOptionsConstants::EXPIRE_OPTIONS as $key => $val) {
                 if ((int)$key <= $diffDate && (int)$key !== 0) {
                     $options[$key] = $val;
@@ -58,7 +47,7 @@ class FileDownloadController extends Controller
         return view(
             'user.create-download-link',
             [
-                'status' => $status,
+                'status' => $fileExists,
                 'files' => $files,
                 'options' => $options,
             ]
@@ -70,91 +59,67 @@ class FileDownloadController extends Controller
         $content = $request->getContent();
         $json = json_decode($content, true) ?? [];
         $fileIds = $json['file'] ?? [];
-        $requestFileLength = count($fileIds);
-        $fileCount = 0;
 
-        // $fileInfoでエラー起きた場合の処理を考える
-        if (0 < $requestFileLength) {
-            foreach ($fileIds as $id) {
-                $fileInfo = $this->getFileInfo((int)$id);
-                $permission = false;
-                // if ファイルが存在しているか
-                if ($fileInfo) {
-                    $upload = $fileInfo->upload;
-                    $permission = $this->checkAuthUserEqCreateUser($upload->uploadLink->user_id);
-                    $expireDate = $upload->expire_date ?? 0;
-                }
-                // if ファイルがアップロードされる際に使われたリンク作成したユーザーなのか
-                if ($permission) {
-                    if ($this->checkExpireDate($expireDate)) {
-                        //  ダウンロード処理
-                        $fileCount++;
-                    } else {
-                        return response()
-                            ->json(['message' =>  \MessageConstants::ERROR['fileExpired']], 404);
-                    }
-                }
-            }
+        $files =  File::with('upload.uploadLink')
+            ->whereIn('id', $fileIds)
+            ->whereHas('upload.uploadLink', function ($query) {
+                $query->where('user_id', Auth::user()->id);
+            })->get();
 
-            if ($fileCount === $requestFileLength) {
-                return response()->json([]);
+        if ($files->isEmpty()) {
+            return response()
+                ->json(['message' => \MessageConstants::ERROR['fileNotFound']], 404);
+        }
+
+        foreach ($files as $file) {
+            if (!$this->checkExpireDate($file->upload->expire_date)) {
+                return response()
+                    ->json(['message' => \MessageConstants::ERROR['fileExpired']], 404);
             }
         }
 
-        return response()
-            ->json(['message' =>  \MessageConstants::ERROR['fileNotFound']], 404);
+        return response()->json([]);
     }
 
     public function createLink(Request $request)
     {
         $fileIds = $request->file ?? [];
-        $requestFileLength = count($fileIds);
-        $fileCount = 0;
 
         $key = Str::random(20);
         $expireDate = $this->generateExpireDatetime($request->expire_date);
+        $files = File::with('upload.uploadLink')
+            ->whereIn('id', $fileIds)
+            ->whereHas('upload.uploadLink', function ($query) {
+                $query->where('user_id', Auth::user()->id);
+            })
+            ->whereHas('upload', function ($query) {
+                $query->orWhere('uploads.expire_date', '>=', date('Y-m-d H:i:s'))
+                    ->orWhere('uploads.expire_date', null);
+            })
+            ->get();
 
-        if (0 < $requestFileLength) {
-            // DB処理
-            foreach ($fileIds as $id) {
-                $fileInfo = $this->getFileInfo((int)$id);
-                $permission = false;
-                // if ファイルが存在しているか
-                if ($fileInfo) {
-                    $upload = $fileInfo->upload;
-                    $permission = $this->checkAuthUserEqCreateUser($upload->uploadLink->user_id);
-                    $fileExpireDate = $upload->expire_date ?? 0;
-                }
+        if ($files->isEmpty()) {
+            return back();
+        }
 
-                // if ファイルがアップロードされる際に使われたリンク作成したユーザーなのか
-                if ($permission && $this->checkExpireDate($fileExpireDate)) {
-                    //  ダウンロードリンク作成
-                    if (!$fileCount) {
-                        $download_link = DownloadLink::create([
-                            'upload_link_id' => $upload->uploadLink->id,
-                            'query' => $key,
-                            'expire_date' => $expireDate,
-                        ]);
-                    }
+        $downloadLink = DownloadLink::create([
+            'upload_link_id' => $files[0]->upload->uploadLink->id,
+            'query' => $key,
+            'expire_date' => $expireDate,
+        ]);
 
-                    Download::create([
-                        'download_link_id' => $download_link->id,
-                        'file_id' => $id,
-                    ]);
-                    $fileCount++;
-                }
-            }
+        foreach ($files as $file) {
+            Download::create([
+                'download_link_id' => $downloadLink->id,
+                'file_id' => $file->id,
+            ]);
+        }
 
-            if ($fileCount === $requestFileLength) {
-                session()->flash('downloadUrl', route('user.download', ['key' => $key]));
+        $downloads = Download::where('download_link_id', $downloadLink->id)->count();
 
-                return redirect()
-                    ->route('user.download', ['key' => $key]);
-            }
-
-            // fix! エラーのリダイレクト先を変更
-            return redirect()
-                ->route('user.create.download');
+        if ($downloads === count($files)) {
+            session()->flash('downloadUrl', route('user.download', ['key' => $key]));
+            return redirect()->route('user.download', ['key' => $key]);
         }
     }
 
@@ -187,14 +152,14 @@ class FileDownloadController extends Controller
     public function showDownload(string $key)
     {
         // file一覧を取得する
-        $links = DownloadLink::with('download.file.upload.uploadLink')->where('query', $key)->get();
+        $link = DownloadLink::with('download.file.upload.uploadLink')->where('query', $key)->first();
         // 有効期限内であればダウンロードできるようにする
-        $expireStatus = $this->checkExpireDate($links[0]->expire_date);
-        $expiredDate = $this->formatShowExpireDatetime($links[0]->expire_date) ?? '期限なし';
+        $expireStatus = $this->checkExpireDate($link->expire_date);
+        $expiredDate = $this->formatShowExpireDatetime($link->expire_date) ?? '期限なし';
 
         return view('user.download', [
-            'upload' => $links[0]->download[0],
-            'files' => $links[0]->download,
+            'upload' => $link->download[0],
+            'files' => $link->download,
             'expire_status' => $expireStatus,
             'expire_date' => $expiredDate,
         ]);
@@ -205,109 +170,61 @@ class FileDownloadController extends Controller
         $json = json_decode($request->getContent(), true) ?? [];
         $fileIds = $json['file'] ?? [];
         $downloadKey = $json['key'] ?? '';
-        $requestFileLength = count($fileIds);
+        $userId = Auth::user()->id ?? 0;
 
-        if ($requestFileLength === 1) {
-            $fileInfo = $this->getFileInfo((int)$fileIds[0]);
-            $permission = false;
-            // if ファイルが存在しているか
-            if ($fileInfo) {
-                $upload = $fileInfo->upload;
-                $permission = $this->checkAuthUserEqCreateUser($upload->uploadLink->user_id);
-                $expireDate = $upload->expire_date ?? 0;
+        $files = File::whereIn('id', $fileIds)
+            ->where(
+                function ($query) use ($userId, $downloadKey) {
+                    $query
+                        ->whereHas('upload.uploadLink', function ($query) use ($userId) {
+                            $query->where('user_id', $userId);
+                        })
+                        ->orWhereHas('download.downloadLink', function ($query) use ($downloadKey) {
+                            $query->where('query', $downloadKey);
+                        });
+                }
+            )
+            ->whereHas('upload', function ($query) {
+                $query->orWhere('uploads.expire_date', '>=', date('Y-m-d H:i:s'))
+                    ->orWhere('uploads.expire_date', null);
+            });
 
-                if (!$permission) {
-                    $downloadInfo = $this->getDownloadInfo($fileInfo->id, $downloadKey);
-                    $permission = $downloadInfo;
-                    $expireDate = $downloadInfo->expire_date ?? 0;
-                }
-            }
-            // if ファイルがアップロードされる際に使われたリンク作成したユーザーなのか
-            if ($permission) {
-                if ($this->checkExpireDate($expireDate)) {
-                    //  ダウンロード処理
-                    return response()->download(
-                        Storage::path($fileInfo->path),
-                        $fileInfo->name,
-                        ['Content-Type' => Storage::mimeType($fileInfo->path)]
-                    );
-                }
-                return response()
-                    ->json(['message' =>  \MessageConstants::ERROR['fileExpired']], 404);
-            }
+        $fileCounts = $files->count();
+
+        if ($fileCounts === 0) {
+            return response()
+                ->json(['message' => \MessageConstants::ERROR['fileNotFound']], 404);
         }
 
-        if (1 < $requestFileLength) {
-            // ファイルを開いてzipを作成
+        if ($fileCounts === 1) {
+            $fileInfo = $files->first();
+            $file = Storage::path($fileInfo->path);
+            $name = $fileInfo->name;
+            $headers =  ['Content-Type' => Storage::mimeType($fileInfo->path)];
+            $afterDelete = false;
+        }
+
+        if (1 < $fileCounts) {
+            $fileInfos = $files->get();
             $fileName = 'download_' . Carbon::now()->format('Y-m-d_H-i-s') . '_' . Str::random(5) . '.zip';
             $savePath = storage_path('app/public/temp/' . $fileName);
-
-            //zipファイル作成
             $zip = new \ZipArchive();
             $zip->open($savePath, \ZipArchive::CREATE);
-            $fileCount = 0;
 
-            foreach ($fileIds as $id) {
-                $fileInfo = $this->getFileInfo((int)$id);
-                $permission = false;
-                // if ファイルが存在しているか
-                if ($fileInfo) {
-                    $upload = $fileInfo->upload;
-                    $permission = $this->checkAuthUserEqCreateUser($upload->uploadLink->user_id);
-                    $expireDate = $upload->expire_date ?? 0;
-
-                    if (!$permission) {
-                        $downloadInfo = $this->getDownloadInfo($fileInfo->id, $downloadKey);
-                        $permission = $downloadInfo;
-                        $expireDate = $downloadInfo->expire_date ?? 0;
-                    }
-                }
-                // if ファイルがアップロードされる際に使われたリンク作成したユーザーなのか
-                if ($permission) {
-                    if ($this->checkExpireDate($expireDate)) {
-                        //  ダウンロード処理
-                        $zip->addFile(Storage::path($fileInfo->path), $fileInfo->name);
-                        $fileCount++;
-                    } else {
-                        return response()
-                            ->json(['message' =>  \MessageConstants::ERROR['fileExpired']], 404);
-                    }
-                }
+            foreach ($fileInfos as $file) {
+                $zip->addFile(Storage::path($file->path), $file->name);
             }
 
-            if ($fileCount === $requestFileLength) {
-                $zip->close();
+            $zip->close();
 
-                return response()
-                    ->download(
-                        $savePath,
-                        $fileName,
-                        ['Content-Type' => 'application/zip']
-                    )
-                    ->deleteFileAfterSend();
-            }
+            $file = $savePath;
+            $name = $fileName;
+            $headers = ['Content-Type' => 'application/zip'];
+            $afterDelete = true;
         }
 
-        return response()
-            ->json(['message' =>  \MessageConstants::ERROR['fileNotFound']], 404);
-    }
-
-    private function getFileInfo(int $id): File | bool
-    {
-        return File::with('upload.uploadLink')->find($id) ?? false;
-    }
-
-    private function getDownloadInfo(int $id, string $key): DownloadLink | bool
-    {
-        return DownloadLink::where([['file_id', '=', $id], ['query', '=', $key]])->first()
-            ?? false;
-    }
-
-    private function checkAuthUserEqCreateUser(int $userId): bool
-    {
-        $authorizedUserId = Auth::user()->id ?? '';
-
-        return $authorizedUserId === $userId;
+        return response()->download($file, $name, $headers)
+            ->deleteFileAfterSend($afterDelete);
     }
 
     private function checkExpireDate(?string $dateTime): bool

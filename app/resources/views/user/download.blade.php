@@ -155,7 +155,7 @@
                     key: key,
                 }));
                 const headers = response.headers['content-disposition'].split('filename=');
-                const filename = headers[headers.length-1];
+                const filename = headers[headers.length-1].replace(/"/g,"");
                 const blob = new Blob([response.data]);
                 const link = document.createElement('a');
                 link.href = window.URL.createObjectURL(blob);

@@ -8,6 +8,7 @@
         <x-loading-window></x-loading-window>
         <x-error-message></x-error-message>
         <x-confirm-window></x-confirm-window>
+        <x-copy-message></x-copy-message>
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
@@ -126,7 +127,7 @@
         let fileDeleteBtn = document.querySelector('#file-delete-btn');
         let fileSelectBtns = document.querySelectorAll('.file-select-btn');
         let confirmWrapCloseBtn = document.querySelector('#confirm_close_btn');
-        let copyBtn = document.querySelector('#copy_btn');
+        let copyBtns = document.querySelectorAll('.copy-btn');
         let linkDeleteBtns = document.querySelectorAll('.link-delete-btn');
         let confirmBtn = document.querySelector('#confirm-btn');
         let cancelBtn = document.querySelector('#cancel-btn');
@@ -135,8 +136,8 @@
         let errorWrapSession = document.querySelector('#error_wrap_session');
         let confirmWrap = document.querySelector('#confirm_wrap');
         let errorMessage = document.querySelector('#error_message');
-        let copyText = document.querySelector('#copy_text');
-        let copyMessage = document.querySelector('#copy_message');
+        let copyText = document.querySelector('#copy-text');
+        let copyMessage = document.querySelector('#copy-message');
         let requestFiles = new Set();
 
         function sendForm(url, fileIds, method='post'){
@@ -178,6 +179,22 @@
             errorMsgElm.innerText = text;
         }
 
+        if(copyBtns){
+            copyBtns.forEach(btn => {
+                btn.addEventListener('click', e => {
+                    let src = e.currentTarget.dataset.src;
+                    if(navigator.clipboard){
+                        navigator.clipboard.writeText(src);
+                            copyMessage.classList.remove('invisible');
+                        setTimeout(() =>{
+                            copyMessage.classList.add('invisible');
+                        },3000);
+                    }
+                });
+            });
+        }
+
+
         fileSelectBtns.forEach(btn => btn.addEventListener('click', e => {
             let target = e.currentTarget;
             let fileId = target.dataset.file;
@@ -204,9 +221,10 @@
             })
             .then(response => {
                 const headers = response.headers['content-disposition'].split('filename=');
-                const filename = headers[headers.length-1];
+                const filename = headers[headers.length-1].replace(/"/g,"");
                 const blob = new Blob([response.data]);
                 const link = document.createElement('a');
+                console.log(filename);
                 link.href = window.URL.createObjectURL(blob);
                 link.setAttribute('download', filename);
                 document.body.appendChild(link);
