@@ -28,4 +28,11 @@ class DownloadLink extends Model
     {
         return $this->belongsTo(UploadLink::class);
     }
+
+    public function scopeAuthUser($query, $userId)
+    {
+        return $query->whereHas('uploadLink', function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        });
+    }
 }

@@ -11,23 +11,17 @@ use Illuminate\Http\Request;
 
 class DeleteController extends Controller
 {
-    private const MESSAGE = [
-        'expired' => 'ファイルの有効期限が切れています。',
-        'notFound' => 'ファイルが指定されていないか、存在していません。',
-    ];
-
-
     public function deleteFile(Request $request)
     {
-        foreach ($request->id as $id) {
-            $file = File::with('upload.uploadLink')->find($id);
+        $files = File::whereIn('id', $request->id)
+            ->AuthUser(Auth::user()->id)->get();
+
+        if ($files->isEmpty()) {
+            return back()->withErrors(['error' => \MessageConstants::ERROR['fileNotFound']]);
+        }
+
+        foreach ($files as $file) {
             $uploadId = $file->upload->id;
-            $userId = $file->upload->uploadLink->user_id;
-
-            if ($file && $userId !== Auth::user()->id) {
-                return back()->withErrors(['error' => self::MESSAGE['notFound']]);
-            }
-
             $file->delete();
         }
 
@@ -37,7 +31,7 @@ class DeleteController extends Controller
             return redirect()->route('user.dashboard');
         }
 
-        return back()->withErrors(['error' => 'ファイルを削除しました']);
+        return back()->withErrors(['error' => \MessageConstants::SUCCESS['fileDeleted']]);
     }
 
     public function deleteUploadLink(Request $request)
@@ -45,35 +39,27 @@ class DeleteController extends Controller
         $uploadLinks = UploadLink::whereIn('id', $request->id)
             ->where('user_id', Auth::user()->id)->get();
 
-        if (empty($uploadLinks->items)) {
+        if ($uploadLinks->isEmpty()) {
             $uploadLinks->each(fn ($uploadLink) => $uploadLink->delete());
-
             return redirect()->route('user.dashboard');
         }
 
         return redirect()->route('user.dashboard')
-            ->withErrors(['error' => 'リンクが存在しません']);
+            ->withErrors(['error' => \MessageConstants::ERROR['linkNotFound']]);
     }
 
     public function deleteDownloadLink(Request $request)
     {
         $downloadLinks = DownloadLink::with('uploadLink')
-            ->whereIn('id', $request->id)->get();
-        $userIds = $downloadLinks->pluck('uploadLink.user_id');
+            ->whereIn('id', $request->id)->AuthUser(Auth::user()->id)->get();
 
         // Linkの存在を確認して、userの権限を確認
-        if (!empty($downloadLinks->items)) {
-            return back()->withErrors(['error' => self::MESSAGE['notFound']]);
-        }
-
-        foreach ($userIds as $id) {
-            if ($id !== Auth::user()->id) {
-                return back()->withErrors(['error' => self::MESSAGE['notFound']]);
-            }
+        if ($downloadLinks->isEmpty()) {
+            return back()->withErrors(['error' => \MessageConstants::ERROR['fileNotFound']]);
         }
 
         $downloadLinks->each(fn ($downloadLink) => $downloadLink->delete());
 
-        return back()->withErrors(['error' => 'ファイルを削除しました']);
+        return back()->withErrors(['error' => \MessageConstants::SUCCESS['fileDeleted']]);
     }
 }

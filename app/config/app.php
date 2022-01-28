@@ -205,6 +205,7 @@ return [
         'DB' => Illuminate\Support\Facades\DB::class,
         'Eloquent' => Illuminate\Database\Eloquent\Model::class,
         'Event' => Illuminate\Support\Facades\Event::class,
+        'ExpireDateUtil' => App\Facades\ExpireDateUtil::class,
         'File' => Illuminate\Support\Facades\File::class,
         'Gate' => Illuminate\Support\Facades\Gate::class,
         'Hash' => Illuminate\Support\Facades\Hash::class,
@@ -229,6 +230,9 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
 
+        // Constants
+        'DateOptionsConstants' => App\Constants\DateOptions::class,
+        'MessageConstants' => App\Constants\Messages::class,
     ],
 
 ];
