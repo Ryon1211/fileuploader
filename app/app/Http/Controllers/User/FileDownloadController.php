@@ -22,21 +22,16 @@ class FileDownloadController extends Controller
 
         $files = File::with('upload.uploadLink')
             ->whereIn('id', $fileIds)
-            ->whereHas('upload.uploadLink', function ($query) {
-                $query->where('user_id', Auth::user()->id);
-            })
-            ->whereHas('upload', function ($query) {
-                $query->orWhere('uploads.expire_date', '>=', date('Y-m-d H:i:s'))
-                    ->orWhere('uploads.expire_date', null);
-            })->get();
+            ->AuthUser(Auth::user()->id)
+            ->BeforeExpired()->get();
 
         $fileExists = !$files->isEmpty();
 
         if ($fileExists && $files[0]->upload->expire_date !== null) {
-            $targetDate = Carbon::parse($files[0]->upload->expire_date);
-            $diffDate = Carbon::now()->diffInDays($targetDate);
-
+            $diffDate = Carbon::now()
+                ->diffInDays(Carbon::parse($files[0]->upload->expire_date));
             $options = [$files[0]->upload->expire_date => 'ファイルの有効期限まで'];
+
             foreach (\DateOptionsConstants::EXPIRE_OPTIONS as $key => $val) {
                 if ((int)$key <= $diffDate && (int)$key !== 0) {
                     $options[$key] = $val;
@@ -61,10 +56,7 @@ class FileDownloadController extends Controller
         $fileIds = $json['file'] ?? [];
 
         $files =  File::with('upload.uploadLink')
-            ->whereIn('id', $fileIds)
-            ->whereHas('upload.uploadLink', function ($query) {
-                $query->where('user_id', Auth::user()->id);
-            })->get();
+            ->whereIn('id', $fileIds)->AuthUser(Auth::user()->id)->get();
 
         if ($files->isEmpty()) {
             return response()
@@ -72,7 +64,7 @@ class FileDownloadController extends Controller
         }
 
         foreach ($files as $file) {
-            if (!$this->checkExpireDate($file->upload->expire_date)) {
+            if (!\ExpireDateUtil::checkExpireDate($file->upload->expire_date)) {
                 return response()
                     ->json(['message' => \MessageConstants::ERROR['fileExpired']], 404);
             }
@@ -86,17 +78,12 @@ class FileDownloadController extends Controller
         $fileIds = $request->file ?? [];
 
         $key = Str::random(20);
-        $expireDate = $this->generateExpireDatetime($request->expire_date);
+        $expireDate = \ExpireDateUtil::generateExpireDatetime($request->expire_date);
+
         $files = File::with('upload.uploadLink')
             ->whereIn('id', $fileIds)
-            ->whereHas('upload.uploadLink', function ($query) {
-                $query->where('user_id', Auth::user()->id);
-            })
-            ->whereHas('upload', function ($query) {
-                $query->orWhere('uploads.expire_date', '>=', date('Y-m-d H:i:s'))
-                    ->orWhere('uploads.expire_date', null);
-            })
-            ->get();
+            ->AuthUser(Auth::user()->id)
+            ->BeforeExpired()->get();
 
         if ($files->isEmpty()) {
             return back();
@@ -130,16 +117,14 @@ class FileDownloadController extends Controller
         // upload_link_idに紐付いたレコードかつ有効期銀内のデータのみ取得する
         $downloads = DownloadLink::with('download.file')
             ->where('upload_link_id', $link->id)
-            ->where(
-                function ($query) {
-                    $query->orWhere('expire_date', '>=', date('Y-m-d H:i:s'))
-                        ->orWhere('expire_date', null);
-                }
-            )->paginate(5);
+            ->where(function ($query) {
+                $query->where('expire_date', '>=', date('Y-m-d H:i:s'))
+                    ->orWhere('expire_date', null);
+            })->paginate(5);
 
         // 有効期限内であればダウンロードできるようにする
-        $expireStatus = $this->checkExpireDate($link->upload->expire_date);
-        $expiredDate = $this->formatShowExpireDatetime($link->upload->expire_date) ?? '期限なし';
+        $expireStatus = \ExpireDateUtil::checkExpireDate($link->upload->expire_date);
+        $expiredDate = \ExpireDateUtil::formatShowExpireDatetime($link->upload->expire_date) ?? '期限なし';
 
         return view('user.upload-detail', [
             'upload' => $link->upload,
@@ -154,8 +139,8 @@ class FileDownloadController extends Controller
         // file一覧を取得する
         $link = DownloadLink::with('download.file.upload.uploadLink')->where('query', $key)->first();
         // 有効期限内であればダウンロードできるようにする
-        $expireStatus = $this->checkExpireDate($link->expire_date);
-        $expiredDate = $this->formatShowExpireDatetime($link->expire_date) ?? '期限なし';
+        $expireStatus = \ExpireDateUtil::checkExpireDate($link->expire_date);
+        $expiredDate = \ExpireDateUtil::formatShowExpireDatetime($link->expire_date) ?? '期限なし';
 
         return view('user.download', [
             'upload' => $link->download[0],
@@ -176,18 +161,13 @@ class FileDownloadController extends Controller
             ->where(
                 function ($query) use ($userId, $downloadKey) {
                     $query
-                        ->whereHas('upload.uploadLink', function ($query) use ($userId) {
-                            $query->where('user_id', $userId);
-                        })
+                        ->AuthUser($userId)
                         ->orWhereHas('download.downloadLink', function ($query) use ($downloadKey) {
                             $query->where('query', $downloadKey);
                         });
                 }
             )
-            ->whereHas('upload', function ($query) {
-                $query->orWhere('uploads.expire_date', '>=', date('Y-m-d H:i:s'))
-                    ->orWhere('uploads.expire_date', null);
-            });
+            ->BeforeExpired();
 
         $fileCounts = $files->count();
 
@@ -225,27 +205,5 @@ class FileDownloadController extends Controller
 
         return response()->download($file, $name, $headers)
             ->deleteFileAfterSend($afterDelete);
-    }
-
-    private function checkExpireDate(?string $dateTime): bool
-    {
-        $nowDate = Carbon::now();
-        $expiredDate = Carbon::parse($dateTime);
-
-        return $nowDate->lte($expiredDate);
-    }
-
-    private function generateExpireDatetime(?string $date): ?string
-    {
-        if (array_key_exists($date, \DateOptionsConstants::EXPIRE_OPTIONS)) {
-            return $date ? Carbon::now()->addDay($date) : null;
-        }
-
-        return $date;
-    }
-
-    private function formatShowExpireDatetime(?string $date): ?string
-    {
-        return $date ? Carbon::parse($date) : null;
     }
 }
