@@ -46,4 +46,53 @@ class File extends Model
                 ->orWhere('uploads.expire_date', null);
         });
     }
+
+    public function scopeSearchKeyword($query, $keyword)
+    {
+        $convertKeyword = mb_convert_kana($keyword, 's');
+        $keywords = preg_split('/[\s]+/', $convertKeyword, -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach ($keywords as $word) {
+            $query->where('files.name', 'like', "%$word%");
+        }
+    }
+
+    public function scopeSortOrder($query, $order)
+    {
+        if ($order === null || $order === 'create_asc') {
+            $query->orderBy('uploads.created_at');
+        } elseif ($order === 'create_desc') {
+            $query->orderByDesc('uploads.created_at');
+        }
+
+        if ($order === 'title_asc') {
+            $query->orderBy('name');
+        } elseif ($order === 'title_desc') {
+            $query->orderByDesc('name');
+        }
+
+        if ($order === 'status_asc') {
+            $query->orderByRaw(
+                "case
+                     when uploads.expire_date is not null
+                     and uploads.id is not null then '1900-01-01 00:00:00'
+                     when uploads.expire_date is null
+                     and uploads.id is null then '9999-12-31 00:00:00'
+                     else uploads.expire_date end"
+            )->orderByDesc('uploads.expire_date');
+        } elseif ($order === 'status_desc') {
+            $query->orderByRaw(
+                "case
+                     when uploads.expire_date is null
+                     and uploads.id is not null then '9999-12-31 00:00:00'
+                     else uploads.expire_date end"
+            )->orderBy('uploads.expire_date');
+        }
+
+        if ($order === 'expire_asc') {
+            $query->orderBy('uploads.expire_date');
+        } elseif ($order === 'expire_desc') {
+            $query->orderByDesc('uploads.expire_date');
+        }
+    }
 }
