@@ -16,6 +16,7 @@ class AddUploadLinkIdToUploadsTable extends Migration
         Schema::table('uploads', function (Blueprint $table) {
             $table->foreignId('upload_link_id')
                 ->after('id')
+                ->default(0)
                 ->constrained()
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
