@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 class UploadLinkFactory extends Factory
 {
@@ -14,7 +16,8 @@ class UploadLinkFactory extends Factory
     public function definition()
     {
         return [
-            //
+            'message' => $this->faker->realText(100),
+            'expire_date' => Carbon::now()->addDays(3),
         ];
     }
 }
