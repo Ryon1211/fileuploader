@@ -16,6 +16,7 @@ class AddForeignIdsToDownloadLinksTable extends Migration
         Schema::table('download_links', function (Blueprint $table) {
             $table->foreignId('upload_link_id')
                 ->after('id')
+                ->default(0)
                 ->constrained()
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();

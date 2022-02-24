@@ -16,6 +16,7 @@ class AddUploadIdToFilesTable extends Migration
         Schema::table('files', function (Blueprint $table) {
             $table->foreignId('upload_id')
                 ->after('id')
+                ->default(0)
                 ->constrained()
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
