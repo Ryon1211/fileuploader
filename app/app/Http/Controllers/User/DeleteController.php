@@ -40,12 +40,12 @@ class DeleteController extends Controller
             ->where('user_id', Auth::user()->id)->get();
 
         if ($uploadLinks->isEmpty()) {
-            $uploadLinks->each(fn ($uploadLink) => $uploadLink->delete());
-            return redirect()->route('user.dashboard');
+            return redirect()->route('user.dashboard')
+                ->withErrors(['error' => \MessageConstants::ERROR['linkDisabled']]);
         }
 
-        return redirect()->route('user.dashboard')
-            ->withErrors(['error' => \MessageConstants::ERROR['linkNotFound']]);
+        $uploadLinks->each(fn ($uploadLink) => $uploadLink->delete());
+        return redirect()->route('user.dashboard');
     }
 
     public function deleteDownloadLink(Request $request)
@@ -59,7 +59,6 @@ class DeleteController extends Controller
         }
 
         $downloadLinks->each(fn ($downloadLink) => $downloadLink->delete());
-
         return back()->withErrors(['error' => \MessageConstants::SUCCESS['fileDeleted']]);
     }
 }
