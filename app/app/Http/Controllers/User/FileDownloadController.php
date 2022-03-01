@@ -8,8 +8,10 @@ use App\Models\File;
 use App\Models\DownloadLink;
 use App\Models\UploadLink;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -51,7 +53,7 @@ class FileDownloadController extends Controller
 
     public function checkBeforeCreateLink(Request $request)
     {
-        $content = $request->getContent();
+        $content = $request->getContent() ?: '';
         $json = json_decode($content, true) ?? [];
         $fileIds = $json['file'] ?? [];
 
@@ -89,25 +91,28 @@ class FileDownloadController extends Controller
             return back();
         }
 
-        $downloadLink = DownloadLink::create([
-            'upload_link_id' => $files[0]->upload->uploadLink->id,
-            'query' => $key,
-            'expire_date' => $expireDate,
-        ]);
-
-        foreach ($files as $file) {
-            Download::create([
-                'download_link_id' => $downloadLink->id,
-                'file_id' => $file->id,
+        DB::beginTransaction();
+        try {
+            $downloadLink = DownloadLink::create([
+                'upload_link_id' => $files[0]->upload->uploadLink->id,
+                'query' => $key,
+                'expire_date' => $expireDate,
             ]);
+
+            foreach ($files as $file) {
+                Download::create([
+                    'download_link_id' => $downloadLink->id,
+                    'file_id' => $file->id,
+                ]);
+            }
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            abort(500);
         }
 
-        $downloads = Download::where('download_link_id', $downloadLink->id)->count();
-
-        if ($downloads === count($files)) {
-            session()->flash('downloadUrl', route('user.download', ['key' => $key]));
-            return redirect()->route('user.download', ['key' => $key]);
-        }
+        session()->flash('downloadUrl', route('user.download', ['key' => $key]));
+        return redirect()->route('user.download', ['key' => $key]);
     }
 
     public function showFiles(string $key)
@@ -124,12 +129,10 @@ class FileDownloadController extends Controller
 
         // 有効期限内であればダウンロードできるようにする
         $expireStatus = \ExpireDateUtil::checkExpireDate($link->upload->expire_date);
-        $expiredDate = \ExpireDateUtil::formatShowExpireDatetime($link->upload->expire_date) ?? '期限なし';
 
         return view('user.upload-detail', [
             'upload' => $link->upload,
             'expire_status' => $expireStatus,
-            'expire_date' => $expiredDate,
             'download_links' => $downloads,
         ]);
     }
@@ -140,13 +143,12 @@ class FileDownloadController extends Controller
         $link = DownloadLink::with('download.file.upload.uploadLink')->where('query', $key)->first();
         // 有効期限内であればダウンロードできるようにする
         $expireStatus = \ExpireDateUtil::checkExpireDate($link->expire_date);
-        $expiredDate = \ExpireDateUtil::formatShowExpireDatetime($link->expire_date) ?? '期限なし';
 
         return view('user.download', [
             'upload' => $link->download[0],
             'files' => $link->download,
             'expire_status' => $expireStatus,
-            'expire_date' => $expiredDate,
+            'expire_date' => $link->expire_date,
         ]);
     }
 
