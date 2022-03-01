@@ -151,7 +151,7 @@
                         <!-- Expire Date -->
                         <div>
                             <p class="block w-full font-medium text-sm text-gray-700">Expire Date</p>
-                            <p class="block break-words mx-1 w-full">{{ $upload_information->expire_date }}</p>
+                            <p class="block break-words mx-1 w-full">{{ $upload_information->expire_date ?? \DateOptionsConstants::EXPIRE_OPTIONS['0']}}</p>
                         </div>
                         @else
                         <p>{{ $message }}</p>

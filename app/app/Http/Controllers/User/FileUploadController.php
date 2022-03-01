@@ -8,8 +8,12 @@ use App\Http\Requests\UploadFilesRequest;
 use App\Models\File;
 use App\Models\Upload;
 use App\Models\UploadLink;
+use Exception;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+
 
 class FileUploadController extends Controller
 {
@@ -33,9 +37,9 @@ class FileUploadController extends Controller
         ]);
 
         return redirect()
-            ->route('user.create.upload', [
-                'options' => \DateOptionsConstants::EXPIRE_OPTIONS
-            ])->with('uploadUrl', route('user.upload', ['key' => $key]));
+            ->route('user.create.upload')
+            ->with('options', \DateOptionsConstants::EXPIRE_OPTIONS)
+            ->with('uploadUrl', route('user.upload', ['key' => $key]));
     }
 
     public function showUploadForm(string $key)
@@ -52,9 +56,7 @@ class FileUploadController extends Controller
 
             if ($upload) {
                 $files = File::where('upload_id', $upload->id)->get();
-                $upload['expire_date'] =
-                    \ExpireDateUtil::formatShowExpireDatetime($upload->expire_date)
-                    ?? \DateOptionsConstants::EXPIRE_OPTIONS['0'];
+                $upload['expire_date'] = $upload->expire_date;
             }
         }
 
@@ -71,31 +73,36 @@ class FileUploadController extends Controller
     public function uploadFiles(UploadFilesRequest $request, string $key)
     {
         // database Uploadに情報を登録
-        $upload = Upload::create([
-            'upload_link_id' => UploadLink::where('query', $key)->first()->id,
-            'sender' => $request->sender,
-            'message' => $request->message,
-            'expire_date' => \ExpireDateUtil::generateExpireDatetime($request->expire_date),
-        ]);
+        DB::beginTransaction();
+        try {
+            $upload = Upload::create([
+                'upload_link_id' => UploadLink::where('query', $key)->first()->id,
+                'sender' => $request->sender,
+                'message' => $request->message,
+                'expire_date' => \ExpireDateUtil::generateExpireDatetime($request->expire_date),
+            ]);
 
-        foreach ($request->file('file') as $file) {
-            $originalName = $file->getClientOriginalName();
-            $mimeType = $file->getMimeType();
-            $fileSize = $file->getSize();
-            $hashName = $file->hashName();
+            foreach ($request->file('file') as $file) {
+                $originalName = $file->getClientOriginalName();
+                $mimeType = $file->getMimeType();
+                $fileSize = $file->getSize();
+                $filePath = Storage::putFile('public/upload', $file);
 
-            $filePath = $file->storeAs('public/upload', $hashName);
-
-            if ($filePath) {
-                //database Filesにファイル情報を保存
-                File::create([
-                    'upload_id' => $upload->id,
-                    'path' => $filePath,
-                    'name' => $originalName,
-                    'type' => $mimeType,
-                    'size' => $fileSize,
-                ]);
+                if ($filePath) {
+                    //database Filesにファイル情報を保存
+                    File::create([
+                        'upload_id' => $upload->id,
+                        'path' => $filePath,
+                        'name' => $originalName,
+                        'type' => $mimeType,
+                        'size' => $fileSize,
+                    ]);
+                }
             }
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+            abort(500);
         }
 
         return redirect()->route('user.upload', ['key' => $key]);

@@ -1,4 +1,4 @@
-FROM php:8.0.12-fpm-buster as builder
+FROM php:8.0.12-fpm-buster
 
 # シェルの設定を変更
 SHELL ["/bin/bash", "-c", "-oeux", "pipefail"]
@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y \
   docker-php-ext-install intl pdo_mysql zip bcmath && \
   pecl install xdebug && \
   docker-php-ext-enable xdebug
-
 
 # apt-getでは、古いバージョンのnodejsがインストールされるので、nをインストールして管理
 RUN npm install -g n && n stable
