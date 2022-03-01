@@ -29,7 +29,7 @@
                         <!-- Expire Date -->
                         <div>
                             <p class="block w-full font-medium text-sm text-gray-700">Expire Date</p>
-                            <p class="block break-words mx-1 w-full">{{ $expire_date }}</p>
+                            <p class="block break-words mx-1 w-full">{{ $upload->expire_date ?? \DateOptionsConstants::EXPIRE_OPTIONS['0']}}</p>
                         </div>
                         <div class="flex items-center justify-end mt-4">
                             @if($expire_status)
@@ -101,7 +101,7 @@
                                         </ul>
                                     </div>
                                     <div class="w-2/12 text-center">{{ $download_link->created_at }}</div>
-                                    <div class="w-2/12 text-center">{{ $download_link->expire_date }}</div>
+                                    <div class="w-2/12 text-center">{{ $download_link->expire_date ?? \DateOptionsConstants::EXPIRE_OPTIONS['0'] }}</div>
                                     <div class="w-1/12 text-center">
                                         <x-link-button type="button" class="copy-btn" data-src="{{ route('user.download', ['key' => $download_link->query]) }}"></x-link-button>
                                     </div>
@@ -224,11 +224,12 @@
                 const filename = headers[headers.length-1].replace(/"/g,"");
                 const blob = new Blob([response.data]);
                 const link = document.createElement('a');
-                console.log(filename);
                 link.href = window.URL.createObjectURL(blob);
                 link.setAttribute('download', filename);
                 document.body.appendChild(link);
                 link.click();
+                link.remove();
+
             })
             .catch(async error => {
                 classListToggle(errorWrap, ['invisible']);
@@ -292,7 +293,6 @@
                 let requestFiles = new Set();
                 requestFiles.add(e.currentTarget.dataset.linkId);
                 if(requestFiles.size){
-                    console.log(e);
                     classListToggle(confirmWrap, ['invisible']);
                 } else {
                     classListToggle(errorWrap, ['invisible']);
