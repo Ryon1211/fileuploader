@@ -16,7 +16,7 @@
                     @if($showForm === true)
                     <!-- Validation Errors -->
                     <x-auth-validation-errors class="mb-4" :errors="$errors" />
-                    <form method="POST" action="{{ route('user.upload',['key' => $query]) }}" enctype="multipart/form-data" class="border-0"
+                    <form method="POST" action="{{ route('user.upload',['key' => $path]) }}" enctype="multipart/form-data" class="border-0"
                         id ="upload" multiple>
                         @csrf
                         <!-- Files -->

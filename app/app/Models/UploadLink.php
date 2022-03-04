@@ -14,7 +14,7 @@ class UploadLink extends Model
 
     protected $fillable = [
         'user_id',
-        'query',
+        'path',
         'message',
         'expire_date',
     ];

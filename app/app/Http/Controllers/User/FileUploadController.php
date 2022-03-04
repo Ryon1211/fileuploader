@@ -31,7 +31,7 @@ class FileUploadController extends Controller
 
         UploadLink::create([
             'user_id' => Auth::user()->id,
-            'query' => $key,
+            'path' => $key,
             'message' => $request->message,
             'expire_date' => \ExpireDateUtil::generateExpireDatetime($request->expire_date),
         ]);
@@ -45,7 +45,7 @@ class FileUploadController extends Controller
     public function showUploadForm(string $key)
     {
         // linkのレコードを取得
-        $link = UploadLink::where('query', $key)->first();
+        $link = UploadLink::where('path', $key)->first();
 
         if ($link) {
             $upload = Upload::where('upload_link_id', $link->id)->first();
@@ -63,7 +63,7 @@ class FileUploadController extends Controller
         return view('user.upload', [
             'options' => \DateOptionsConstants::EXPIRE_OPTIONS,
             'showForm' => $showForm ?? false,
-            'query' => $key ?? '',
+            'path' => $key ?? '',
             'upload_information' => $upload ?? [],
             'files' => $files ?? [],
             'message' => $message ?? \MessageConstants::ERROR['linkDisabled'],
@@ -76,7 +76,7 @@ class FileUploadController extends Controller
         DB::beginTransaction();
         try {
             $upload = Upload::create([
-                'upload_link_id' => UploadLink::where('query', $key)->first()->id,
+                'upload_link_id' => UploadLink::where('path', $key)->first()->id,
                 'sender' => $request->sender,
                 'message' => $request->message,
                 'expire_date' => \ExpireDateUtil::generateExpireDatetime($request->expire_date),

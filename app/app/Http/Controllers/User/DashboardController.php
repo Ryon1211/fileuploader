@@ -22,7 +22,7 @@ class DashboardController extends Controller
                 ->select(
                     'files.id',
                     'files.name',
-                    'upload_links.query',
+                    'upload_links.path',
                     'uploads.created_at',
                     'uploads.expire_date',
                     'uploads.id as upload_id'
@@ -36,7 +36,7 @@ class DashboardController extends Controller
                 ->leftJoin('uploads', 'upload_links.id', '=', 'uploads.upload_link_id')
                 ->select(
                     'upload_links.id',
-                    'upload_links.query',
+                    'upload_links.path',
                     'upload_links.message',
                     'upload_links.created_at',
                     'upload_links.expire_date',

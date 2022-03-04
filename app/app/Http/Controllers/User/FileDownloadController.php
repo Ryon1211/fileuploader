@@ -95,7 +95,7 @@ class FileDownloadController extends Controller
         try {
             $downloadLink = DownloadLink::create([
                 'upload_link_id' => $files[0]->upload->uploadLink->id,
-                'query' => $key,
+                'path' => $key,
                 'expire_date' => $expireDate,
             ]);
 
@@ -118,7 +118,7 @@ class FileDownloadController extends Controller
     public function showFiles(string $key)
     {
         // file一覧を取得する
-        $link = UploadLink::with('upload.files')->where('query', $key)->first();
+        $link = UploadLink::with('upload.files')->where('path', $key)->first();
         // upload_link_idに紐付いたレコードかつ有効期銀内のデータのみ取得する
         $downloads = DownloadLink::with('download.file')
             ->where('upload_link_id', $link->id)
@@ -140,7 +140,7 @@ class FileDownloadController extends Controller
     public function showDownload(string $key)
     {
         // file一覧を取得する
-        $link = DownloadLink::with('download.file.upload.uploadLink')->where('query', $key)->first();
+        $link = DownloadLink::with('download.file.upload.uploadLink')->where('path', $key)->first();
         // 有効期限内であればダウンロードできるようにする
         $expireStatus = \ExpireDateUtil::checkExpireDate($link->expire_date);
 
@@ -165,7 +165,7 @@ class FileDownloadController extends Controller
                     $query
                         ->AuthUser($userId)
                         ->orWhereHas('download.downloadLink', function ($query) use ($downloadKey) {
-                            $query->where('query', $downloadKey);
+                            $query->where('path', $downloadKey);
                         });
                 }
             )
