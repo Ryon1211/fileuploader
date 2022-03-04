@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddUploadLinkIdToUploadsTable extends Migration
+class CreateUploadLinksTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,17 @@ class AddUploadLinkIdToUploadsTable extends Migration
      */
     public function up()
     {
-        Schema::table('uploads', function (Blueprint $table) {
-            $table->foreignId('upload_link_id')
-                ->after('id')
-                ->default(0)
+        Schema::create('upload_links', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')
                 ->constrained()
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
+            $table->string('path');
+            $table->text('message')->nullable();
+            $table->dateTime('expire_date')->nullable();
+            $table->timestamp('created_at');
+            $table->timestamp('deleted_at')->nullable();
         });
     }
 
@@ -30,8 +34,6 @@ class AddUploadLinkIdToUploadsTable extends Migration
      */
     public function down()
     {
-        Schema::table('uploads', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('upload_links');
     }
 }
