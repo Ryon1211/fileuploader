@@ -25,9 +25,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Paginator::defaultView('pagination.tailwind-custom');
-        $this->app->bind(
-            'ExpireDateUtil',
-            'App\Libs\ExpireDateUtil'
-        );
+        $this->app->bind('ExpireDateUtil', 'App\Libs\ExpireDateUtil');
+        $this->app->bind('QueryParamsUtil', 'App\Libs\QueryParamsUtil');
     }
 }
