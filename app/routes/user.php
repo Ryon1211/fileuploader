@@ -5,6 +5,7 @@ use App\Http\Controllers\User\DashboardController;
 use App\Http\Controllers\User\DeleteController;
 use App\Http\Controllers\User\FileUploadController;
 use App\Http\Controllers\User\FileDownloadController;
+use App\Http\Controllers\User\ListController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -58,6 +59,15 @@ Route::group(['middleware' => 'auth:users'], function () {
 
     Route::post('/delete/download', [DeleteController::class, 'deleteDownloadLink'])
         ->name('delete.download');
+
+    Route::get('/list', [ListController::class, 'index'])
+        ->name('list');
+
+    Route::post('/list/register', [ListController::class, 'register'])
+        ->name('list.register');
+
+    Route::post('/list/search', [ListController::class, 'search'])
+        ->name('list.search');
 });
 
 Route::get('/upload/{key}', [FileUploadController::class, 'showUploadForm'])
