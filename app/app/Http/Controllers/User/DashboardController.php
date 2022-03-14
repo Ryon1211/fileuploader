@@ -30,7 +30,8 @@ class DashboardController extends Controller
                 ->searchKeyword($request->search)
                 ->sortOrder($request->orderby)
                 ->paginate(10);
-            $files->appends($this->appendQueryParams($request));
+
+            $files->appends(\QueryParamsUtil->appendQueryParams($request));
         } else {
             $uploadLinks = Link::where('user_id', Auth::user()->id)
                 ->leftJoin('uploads', 'upload_links.id', '=', 'uploads.upload_link_id')
@@ -47,31 +48,12 @@ class DashboardController extends Controller
                 ->sortOrder($request->orderby)
                 ->paginate(10);
 
-            $uploadLinks->appends($this->appendQueryParams($request));
+            $uploadLinks->appends(\QueryParamsUtil::appendQueryParams($request));
         }
 
         return view('user.dashboard', [
             'upload_links' => $uploadLinks,
             'files' => $files,
         ]);
-    }
-
-    public function appendQueryParams(Request $request): array
-    {
-        $queryParams = [];
-
-        if ($request->target) {
-            $queryParams['target'] = $request->target;
-        }
-
-        if ($request->search) {
-            $queryParams['search'] = $request->search;
-        }
-
-        if ($request->orderby) {
-            $queryParams['orderby'] = $request->orderby;
-        }
-
-        return $queryParams;
     }
 }
