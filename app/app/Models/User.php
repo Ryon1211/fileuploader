@@ -43,6 +43,31 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function scopeSearchName($query, $keyword)
+    {
+        $convertKeyword = mb_convert_kana($keyword, 's');
+        $keywords = preg_split('/[\s]+/', $convertKeyword, -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach ($keywords as $word) {
+            $query->orWhere('users.name', 'like', "%$word%");
+        }
+    }
+
+    public function scopeSortOrder($query, $order)
+    {
+        if ($order === null || $order === 'name_asc') {
+            $query->orderBy('name');
+        } elseif ($order === 'name_desc') {
+            $query->orderByDesc('name');
+        }
+
+        if ($order === 'email_asc') {
+            $query->orderBy('email');
+        } elseif ($order === 'email_desc') {
+            $query->orderByDesc('email');
+        }
+    }
+
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new PasswordResetNotification($token));
