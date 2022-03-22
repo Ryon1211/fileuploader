@@ -12,8 +12,6 @@ class ListController extends Controller
 {
     public function index(Request $request)
     {
-
-
         $users = User::where('mylists.user_id', Auth::user()->id)
             ->leftJoin('mylists', 'users.id', '=', 'mylists.registered_user_id')
             ->select(
@@ -23,6 +21,7 @@ class ListController extends Controller
                 'mylists.user_id',
             )
             ->sortOrder($request->orderby)
+            ->distinct()
             ->paginate(10);
 
         $users->appends(\QueryParamsUtil::appendQueryParams($request));
@@ -74,8 +73,37 @@ class ListController extends Controller
                 'mylists.user_id',
             )
             ->sortOrder($request->orderby)
+            ->distinct()
             ->paginate(10);
 
         return view('user.list', ['users' => $users, 'keyword' => $keyword]);
+    }
+
+    public function registeredUserSearch(Request $request)
+    {
+        $content = $request->getContent() ?: '';
+        $json = json_decode($content, true) ?? [];
+        $keyword = $json['search'] ?? [];
+
+        $users = User::where('mylists.user_id', Auth::user()->id)
+            ->where(function ($query) use ($keyword) {
+                if (!empty($keyword)) {
+                    return $query->where(function ($query) use ($keyword) {
+                        $query
+                            ->orWhere('email', $keyword)
+                            ->searchName($keyword);
+                    });
+                }
+            })
+            ->leftJoin('mylists', 'users.id', '=', 'mylists.registered_user_id')
+            ->select(
+                'users.id',
+                'users.name',
+                'users.email',
+            )
+            ->distinct()
+            ->get();
+
+        return response()->json(['users' => $users]);
     }
 }
