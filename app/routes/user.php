@@ -68,6 +68,9 @@ Route::group(['middleware' => 'auth:users'], function () {
 
     Route::post('/list/search', [ListController::class, 'search'])
         ->name('list.search');
+
+    Route::post('/list/search/registered', [ListController::class, 'registeredUserSearch'])
+        ->name('list.search.registered');
 });
 
 Route::get('/upload/{key}', [FileUploadController::class, 'showUploadForm'])
