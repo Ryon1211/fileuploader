@@ -155,7 +155,7 @@
         let copyBtns = document.querySelectorAll('.copy-btn');
         let deleteBtns = document.querySelectorAll('.delete-btn');
         let downloadBtns = document.querySelectorAll('.download-btn');
-        let message = document.querySelector('#copy-message');
+        let message = document.querySelector('#copy_message');
         let confirmWrapCloseBtn = document.querySelector('#confirm_close_btn');
         let confirmBtn = document.querySelector('#confirm-btn');
         let linkSearchBtn = document.querySelector('#link-search-btn');
