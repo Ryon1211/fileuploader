@@ -38,7 +38,7 @@ class DashboardController extends Controller
                 ->select(
                     'upload_links.id',
                     'upload_links.path',
-                    'upload_links.message',
+                    'upload_links.title',
                     'upload_links.created_at',
                     'upload_links.expire_date',
                     'uploads.id as upload_id',

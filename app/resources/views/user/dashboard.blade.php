@@ -67,7 +67,7 @@
                                 :href="route('user.show.files', ['key' => $upload_link->path])"
                                 :uploadLink="$upload_link"></x-upload-status>
                             </div>
-                            <div class="w-4/12 mx-2 break-words"> {{ $upload_link->message }}</div>
+                            <div class="w-4/12 mx-2 break-words"> {{ $upload_link->title }}</div>
                             <div class="w-2/12 text-center"> {{ $upload_link->created_at }}</div>
                             <div class="w-2/12 text-center"> {{ $upload_link->expire_date ?? '期限なし' }}</div>
                             <div class="w-1/12 text-center">
