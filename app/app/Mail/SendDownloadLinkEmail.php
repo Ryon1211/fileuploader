@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class SendUploadLinkEmail extends Mailable
+class SendDownloadLinkEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -31,12 +31,12 @@ class SendUploadLinkEmail extends Mailable
      */
     public function build()
     {
-        $head = 'ファイルをアップロードするためのリンクをお送りします';
-        $msgText = "{$this->fromName}さんから、ファイルをアップロードするためのリンクが届いています。\n以下のリンクからファイルをアップロードしてください。\n";
+        $head = 'ファイルをダウンロードするためのリンクをお送りします';
+        $msgText = "{$this->fromName}さんから、ファイルをダウンロードするためのリンクが届いています。\n以下のリンクからファイルをダウンロードできます。\n";
         $subText = 'このメールがあなた宛でない場合、メールを破棄してください。';
-        $btnText = 'ファイルをアップロードする';
+        $btnText = 'ダウンロードページを見る';
 
-        return $this->subject('ファイルをアップロードするためのリンクをお送りします')
+        return $this->subject('ファイルをダウンロードするためのリンクをお送りします')
             ->markdown(
                 'mail.html.send-link-message',
                 [
