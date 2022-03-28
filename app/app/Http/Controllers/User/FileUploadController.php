@@ -34,7 +34,7 @@ class FileUploadController extends Controller
         $uploadLink = UploadLink::create([
             'user_id' => Auth::user()->id,
             'path' => $key,
-            'message' => $request->message,
+            'title' => $request->title,
             'expire_date' => \ExpireDateUtil::generateExpireDatetime($request->expire_date),
         ]);
 
@@ -43,6 +43,7 @@ class FileUploadController extends Controller
         $message = 'ファイルをアップロードしてほしい人に、以下のリンクを教えてあげましょう。';
 
         $userId = $request->user;
+        $userMessage = $request->message ?? '';
         if ($userId && $uploadLink) {
             $toSendUser = User::where('id', $userId)
                 ->select('name', 'email')->first();
@@ -52,6 +53,7 @@ class FileUploadController extends Controller
                 ->send(new SendUploadLinkEmail(
                     $toName,
                     Auth::user()->name,
+                    $userMessage,
                     $uploadUrl
                 ));
 
@@ -63,7 +65,8 @@ class FileUploadController extends Controller
             ->with('options', \DateOptionsConstants::EXPIRE_OPTIONS)
             ->with('url', $uploadUrl)
             ->with('title', $title)
-            ->with('message', $message);
+            ->with('message', $message)
+            ->with('userMessage', $userMessage);
     }
 
     public function showUploadForm(string $key)

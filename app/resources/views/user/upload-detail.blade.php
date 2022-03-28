@@ -136,8 +136,8 @@
         let errorWrapSession = document.querySelector('#error_wrap_session');
         let confirmWrap = document.querySelector('#confirm_wrap');
         let errorMessage = document.querySelector('#error_message');
-        let copyText = document.querySelector('#copy-text');
-        let copyMessage = document.querySelector('#copy-message');
+        let copyText = document.querySelector('#copy_text');
+        let copyMessage = document.querySelector('#copy_message');
         let requestFiles = new Set();
 
         function sendForm(url, fileIds, method='post'){

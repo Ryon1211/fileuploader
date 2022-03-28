@@ -24,7 +24,8 @@ class UploadLinkRequest extends FormRequest
     public function rules()
     {
         return [
-            'message' => ['required', 'string', 'max:65535'],
+            'title' => ['required', 'string', 'max:200'],
+            'message' => ['nullable', 'string', 'max:1000'],
             'expire_date' => ['required', 'string'],
         ];
     }

@@ -4,41 +4,14 @@
             ファイルのダウンロード
         </h2>
     </x-slot>
-    @if(session('downloadUrl'))
-    <div class="absolute inset-0" x-data="{ modalOpen: true }" x-show="modalOpen">
-        <div class="sm:px-6 lg:px-8 mb-5 absolute inset-0 bg-gray-200	bg-opacity-75 transition duration-150 ease-in-out">
-            <div class="max-w-7xl mx-auto bg-white shadow-sm sm:rounded-lg absolute top-2/4 left-2/4 transform -translate-y-1/2 -translate-x-1/2">
-                <span id="copy_message" class="invisible px-3 py-2 bg-blue-200 absolute top-2/4 left-2/4 transform -translate-y-1/2 -translate-x-1/2">
-                    コピーしました！
-                </span>
-                <div class="w-full p-6 bg-white border-b border-gray-200">
-                    <div class="flex justify-end">
-                        <button @click="modalOpen = !modalOpen">
-                            <svg class="h-5 w-5 text-gray-500"  fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <div>ダウンロードリンクを新規作成しました。</div>
-                    <span id="copy_text">{{ session('downloadUrl') }}</span>
-                    <x-button class="ml-4" id="copy_btn">
-                        コピー
-                    </x-button>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
     <div class="py-12">
-        <div id="load_wrap" class="absolute z-10 inset-0 bg-gray-500 bg-opacity-50 overflow-hidden invisible">
-            <div class="absolute inset-y-2/4 inset-x-2/4">
-                <div class="loader"></div>
-            </div>
-        </div>
-        <span id="error_wrap" class="rounded-md px-6 py-5 bg-red-200 absolute top-2/4 left-2/4 transform -translate-y-1/2 -translate-x-1/2 invisible">
-                <p class="block w-full text-center text-xl mb-2">エラーが発生しました</p>
-                <p id="error_message"></p>
-            </span>
+        <x-show-link
+            :linkUrl="session('url')"
+            :title="session('title')"
+            :message="session('message')"
+            :userMessage="session('userMessage')"  />
+        <x-loading-window></x-loading-window>
+        <x-error-message></x-error-message>
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
@@ -97,14 +70,22 @@
         let linkCreateBtn = document.querySelector('#link-create-btn');
         let fileSelectBtns = document.querySelectorAll('.file-select-btn');
         let copyBtn = document.querySelector('#copy_btn');
+        let copyText = document.querySelector('#copy_text');
+        let copyMessage = document.querySelector('#copy_message');
+        let linkWrap = document.querySelector('#show_link_wrap');
+        let closeLinkBtn = document.querySelector('#show_link_close_btn');
         let loadWrap = document.querySelector('#load_wrap');
         let errorWrap = document.querySelector('#error_wrap');
         let errorMessage = document.querySelector('#error_message');
-        let copyText = document.querySelector('#copy_text');
-        let copyMessage = document.querySelector('#copy_message');
         let requestFiles = new Set();
         let pathName = window.location.pathname.split('/');
         let key = pathName[pathName.length-1];
+
+        function classListToggle(target, classNames){
+            classNames.forEach(className => {
+                target.classList.toggle(className);
+            });
+        }
 
         if(copyBtn){
             copyBtn.addEventListener('click', () => {
@@ -120,6 +101,11 @@
         });
         }
 
+        if(closeLinkBtn) {
+            closeLinkBtn.addEventListener('click', ()=> {
+                classListToggle(linkWrap, ['invisible']);
+            });
+        }
 
         fileSelectBtns.forEach(btn => btn.addEventListener('click', e => {
             let target = e.currentTarget;

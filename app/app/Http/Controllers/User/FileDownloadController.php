@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DownloadLinkRequest;
 use App\Mail\SendDownloadLinkEmail;
 use App\Models\Download;
 use App\Models\File;
@@ -78,7 +79,7 @@ class FileDownloadController extends Controller
         return response()->json([]);
     }
 
-    public function createLink(Request $request)
+    public function createLink(DownloadLinkRequest $request)
     {
         $fileIds = $request->file ?? [];
 
@@ -119,6 +120,7 @@ class FileDownloadController extends Controller
         $message = 'ファイルをダウンロードしてもらいたい人に、以下のリンクを教えてあげましょう。';
 
         $userId = $request->user;
+        $userMessage = $request->message ?? '';
         if ($userId && $downloadLink) {
             $toSendUser = User::where('id', $userId)
                 ->select('name', 'email')->first();
@@ -128,18 +130,19 @@ class FileDownloadController extends Controller
                 ->send(new SendDownloadLinkEmail(
                     $toName,
                     Auth::user()->name,
+                    $userMessage,
                     $downloadUrl
                 ));
 
             $message = "{$toName}さんに、リンクを掲載したメールが送信されました。";
         }
 
-        // session()->flash('downloadUrl', route('user.download', ['key' => $key]));
         return redirect()
             ->route('user.download', ['key' => $key])
             ->with('url', $downloadUrl)
             ->with('title', $title)
-            ->with('message', $message);
+            ->with('message', $message)
+            ->with('userMessage', $userMessage);
     }
 
     public function showFiles(string $key)
