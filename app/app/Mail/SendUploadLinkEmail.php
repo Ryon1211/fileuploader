@@ -19,6 +19,7 @@ class SendUploadLinkEmail extends Mailable
     public function __construct(
         private string $toName,
         private string $fromName,
+        private string $userMessage,
         private string $url
     ) {
         $this->afterCommit();
@@ -42,7 +43,9 @@ class SendUploadLinkEmail extends Mailable
                 [
                     'head' => $head,
                     'toUser' => $this->toName,
+                    'fromName' => $this->fromName,
                     'message' => $msgText,
+                    'userMessage' => $this->userMessage,
                     'subcopy' => $subText,
                     'link' => $this->url,
                     'btnText' => $btnText

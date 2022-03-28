@@ -9,8 +9,16 @@
 # {{ $head }}
 
 {{-- Body --}}
-## こんにちは　{!! nl2br($toUser) !!}さん
+## こんにちは　{{ $toUser }}さん
 {!! nl2br($message) !!}
+
+{{-- Message from sender --}}
+@isset($userMessage)
+@component('mail::panel')
+### {{ $fromName }}さんからのメッセージです。
+{!! nl2br(e($userMessage)) !!}
+@endcomponent
+@endisset
 
 {{-- Subcopy --}}
 @isset($subcopy)
