@@ -5,12 +5,15 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UploadLinkRequest;
 use App\Http\Requests\UploadFilesRequest;
+use App\Mail\SendUploadLinkEmail;
 use App\Models\File;
 use App\Models\Upload;
 use App\Models\UploadLink;
+use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -28,18 +31,39 @@ class FileUploadController extends Controller
     public function createLink(UploadLinkRequest $request)
     {
         $key = Str::random(20);
-
-        UploadLink::create([
+        $uploadLink = UploadLink::create([
             'user_id' => Auth::user()->id,
             'path' => $key,
             'message' => $request->message,
             'expire_date' => \ExpireDateUtil::generateExpireDatetime($request->expire_date),
         ]);
 
+        $uploadUrl = route('user.upload', ['key' => $key]);
+        $title = 'アップロードリンクを新規作成しました';
+        $message = 'ファイルをアップロードしてほしい人に、以下のリンクを教えてあげましょう。';
+
+        $userId = $request->user;
+        if ($userId && $uploadLink) {
+            $toSendUser = User::where('id', $userId)
+                ->select('name', 'email')->first();
+
+            $toName = $toSendUser->name;
+            Mail::to($toSendUser->email)
+                ->send(new SendUploadLinkEmail(
+                    $toName,
+                    Auth::user()->name,
+                    $uploadUrl
+                ));
+
+            $message = "{$toName}さんに、リンクを掲載したメールが送信されました。";
+        }
+
         return redirect()
             ->route('user.create.upload')
             ->with('options', \DateOptionsConstants::EXPIRE_OPTIONS)
-            ->with('uploadUrl', route('user.upload', ['key' => $key]));
+            ->with('url', $uploadUrl)
+            ->with('title', $title)
+            ->with('message', $message);
     }
 
     public function showUploadForm(string $key)

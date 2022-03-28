@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SendDownloadLinkEmail;
 use App\Models\Download;
 use App\Models\File;
 use App\Models\DownloadLink;
 use App\Models\UploadLink;
+use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -111,8 +114,32 @@ class FileDownloadController extends Controller
             abort(500);
         }
 
-        session()->flash('downloadUrl', route('user.download', ['key' => $key]));
-        return redirect()->route('user.download', ['key' => $key]);
+        $downloadUrl = route('user.download', ['key' => $key]);
+        $title = 'ダウンロードリンクを新規作成しました';
+        $message = 'ファイルをダウンロードしてもらいたい人に、以下のリンクを教えてあげましょう。';
+
+        $userId = $request->user;
+        if ($userId && $downloadLink) {
+            $toSendUser = User::where('id', $userId)
+                ->select('name', 'email')->first();
+
+            $toName = $toSendUser->name;
+            Mail::to($toSendUser->email)
+                ->send(new SendDownloadLinkEmail(
+                    $toName,
+                    Auth::user()->name,
+                    $downloadUrl
+                ));
+
+            $message = "{$toName}さんに、リンクを掲載したメールが送信されました。";
+        }
+
+        // session()->flash('downloadUrl', route('user.download', ['key' => $key]));
+        return redirect()
+            ->route('user.download', ['key' => $key])
+            ->with('url', $downloadUrl)
+            ->with('title', $title)
+            ->with('message', $message);
     }
 
     public function showFiles(string $key)
