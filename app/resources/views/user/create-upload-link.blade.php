@@ -7,7 +7,7 @@
     <div class="py-12">
         <x-loading-window></x-loading-window>
         <x-show-link
-            :linkUrl="session('url')"
+            :linkUrl="session('linkUrl')"
             :title="session('title')"
             :message="session('message')"
             :userMessage="session('userMessage')"  />

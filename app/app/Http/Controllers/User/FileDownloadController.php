@@ -141,7 +141,7 @@ class FileDownloadController extends Controller
 
         return redirect()
             ->route('user.download', ['key' => $key])
-            ->with('url', $downloadUrl)
+            ->with('linkUrl', $downloadUrl)
             ->with('title', $title)
             ->with('message', $message)
             ->with('userMessage', $userMessage);
