@@ -65,7 +65,7 @@ class FileUploadController extends Controller
         return redirect()
             ->route('user.create.upload')
             ->with('options', \DateOptionsConstants::EXPIRE_OPTIONS)
-            ->with('url', $uploadUrl)
+            ->with('linkUrl', $uploadUrl)
             ->with('title', $title)
             ->with('message', $message)
             ->with('userMessage', $userMessage);

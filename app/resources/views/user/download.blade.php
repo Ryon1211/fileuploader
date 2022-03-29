@@ -6,7 +6,7 @@
     </x-slot>
     <div class="py-12">
         <x-show-link
-            :linkUrl="session('url')"
+            :linkUrl="session('linkUrl')"
             :title="session('title')"
             :message="session('message')"
             :userMessage="session('userMessage')"  />
