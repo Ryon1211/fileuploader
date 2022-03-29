@@ -31,7 +31,7 @@ class DashboardController extends Controller
                 ->sortOrder($request->orderby)
                 ->paginate(10);
 
-            $files->appends(\QueryParamsUtil->appendQueryParams($request));
+            $files->appends(\QueryParamsUtil::appendQueryParams($request));
         } else {
             $uploadLinks = Link::where('user_id', Auth::user()->id)
                 ->leftJoin('uploads', 'upload_links.id', '=', 'uploads.upload_link_id')
