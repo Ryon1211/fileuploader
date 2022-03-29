@@ -64,15 +64,15 @@
                             <div class="w-2/12 ml-3">
                                 <x-upload-status
                                 class="upload-detail-btn"
-                                :href="route('user.show.files', ['key' => $upload_link->query])"
+                                :href="route('user.show.files', ['key' => $upload_link->path])"
                                 :uploadLink="$upload_link"></x-upload-status>
                             </div>
-                            <div class="w-4/12 mx-2 break-words"> {{ $upload_link->message }}</div>
+                            <div class="w-4/12 mx-2 break-words"> {{ $upload_link->title }}</div>
                             <div class="w-2/12 text-center"> {{ $upload_link->created_at }}</div>
                             <div class="w-2/12 text-center"> {{ $upload_link->expire_date ?? '期限なし' }}</div>
                             <div class="w-1/12 text-center">
                                 @if(\ExpireDateUtil::checkExpireDate($upload_link->expire_date) && !$upload_link->upload_id)
-                                <x-link-button type="button" class="copy-btn" data-src="{{ route('user.upload', ['key' => $upload_link->query]) }}"></x-link-button>
+                                <x-link-button type="button" class="copy-btn" data-src="{{ route('user.upload', ['key' => $upload_link->path]) }}"></x-link-button>
                                 @else
                                 <x-link-button type="button" class="" :disabled="true"></x-link-button>
                                 @endif
@@ -122,7 +122,7 @@
                             <div class="w-2/12 ml-3">
                                 <x-file-status
                                 class="upload-detail-btn"
-                                :href="route('user.show.files', ['key' => $file->query])"
+                                :href="route('user.show.files', ['key' => $file->path])"
                                 :file="$file"></x-file-status>
                             </div>
                             <div class="w-4/12 mx-2 break-words"> {{ $file->name }}</div>
@@ -155,7 +155,7 @@
         let copyBtns = document.querySelectorAll('.copy-btn');
         let deleteBtns = document.querySelectorAll('.delete-btn');
         let downloadBtns = document.querySelectorAll('.download-btn');
-        let message = document.querySelector('#copy-message');
+        let message = document.querySelector('#copy_message');
         let confirmWrapCloseBtn = document.querySelector('#confirm_close_btn');
         let confirmBtn = document.querySelector('#confirm-btn');
         let linkSearchBtn = document.querySelector('#link-search-btn');

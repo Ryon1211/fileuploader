@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UploadLinkRequest extends FormRequest
+class DownloadLinkRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,9 +24,7 @@ class UploadLinkRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => ['required', 'string', 'max:200'],
             'message' => ['nullable', 'string', 'max:1000'],
-            'expire_date' => ['required', 'string'],
         ];
     }
 }

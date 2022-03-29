@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddUploadIdToFilesTable extends Migration
+class CreateFavoritesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,19 @@ class AddUploadIdToFilesTable extends Migration
      */
     public function up()
     {
-        Schema::table('files', function (Blueprint $table) {
-            $table->foreignId('upload_id')
-                ->after('id')
+        Schema::create('favorites', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
+            $table->foreignId('upload_link_id')
                 ->default(0)
                 ->constrained()
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
+            $table->timestamp('created_at');
+            $table->timestamp('deleted_at')->nullable();
         });
     }
 
@@ -30,8 +36,6 @@ class AddUploadIdToFilesTable extends Migration
      */
     public function down()
     {
-        Schema::table('files', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('favorites');
     }
 }

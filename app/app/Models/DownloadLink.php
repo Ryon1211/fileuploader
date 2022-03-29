@@ -15,7 +15,7 @@ class DownloadLink extends Model
 
     protected $fillable = [
         'upload_link_id',
-        'query',
+        'path',
         'expire_date',
     ];
 

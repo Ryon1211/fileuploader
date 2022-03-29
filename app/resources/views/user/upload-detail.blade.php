@@ -103,7 +103,7 @@
                                     <div class="w-2/12 text-center">{{ $download_link->created_at }}</div>
                                     <div class="w-2/12 text-center">{{ $download_link->expire_date ?? \DateOptionsConstants::EXPIRE_OPTIONS['0'] }}</div>
                                     <div class="w-1/12 text-center">
-                                        <x-link-button type="button" class="copy-btn" data-src="{{ route('user.download', ['key' => $download_link->query]) }}"></x-link-button>
+                                        <x-link-button type="button" class="copy-btn" data-src="{{ route('user.download', ['key' => $download_link->path]) }}"></x-link-button>
                                     </div>
                                     <div class="w-1/12 text-center">
                                         <x-link-delete-button type="button" class="link-delete-btn" data-link-id="{{ $download_link->id }}"></x-link-delete-button>
@@ -136,8 +136,8 @@
         let errorWrapSession = document.querySelector('#error_wrap_session');
         let confirmWrap = document.querySelector('#confirm_wrap');
         let errorMessage = document.querySelector('#error_message');
-        let copyText = document.querySelector('#copy-text');
-        let copyMessage = document.querySelector('#copy-message');
+        let copyText = document.querySelector('#copy_text');
+        let copyMessage = document.querySelector('#copy_message');
         let requestFiles = new Set();
 
         function sendForm(url, fileIds, method='post'){

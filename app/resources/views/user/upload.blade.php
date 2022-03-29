@@ -16,7 +16,7 @@
                     @if($showForm === true)
                     <!-- Validation Errors -->
                     <x-auth-validation-errors class="mb-4" :errors="$errors" />
-                    <form method="POST" action="{{ route('user.upload',['key' => $query]) }}" enctype="multipart/form-data" class="border-0"
+                    <form method="POST" action="{{ route('user.upload',['key' => $path]) }}" enctype="multipart/form-data" class="border-0"
                         id ="upload" multiple>
                         @csrf
                         <!-- Files -->
@@ -83,7 +83,7 @@
                         function conversionByteToMegabyte(intBytes){
                             let mbytesVal = intBytes / (1024 ** 2);
                             return 1 < mbytesVal
-                                ?　Math.floor(mbytesVal)
+                                ? Math.floor(mbytesVal)
                                 : mbytesVal.toFixed(2);
                         }
 

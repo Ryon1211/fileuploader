@@ -15,6 +15,11 @@ class CreateFilesTable extends Migration
     {
         Schema::create('files', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('upload_id')
+                ->default(0)
+                ->constrained()
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
             $table->string('path');
             $table->string('name');
             $table->string('type');

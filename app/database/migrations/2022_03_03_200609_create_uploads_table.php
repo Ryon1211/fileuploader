@@ -15,6 +15,11 @@ class CreateUploadsTable extends Migration
     {
         Schema::create('uploads', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('upload_link_id')
+                ->default(0)
+                ->constrained()
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
             $table->string('sender');
             $table->text('message')->nullable();
             $table->dateTime('expire_date')->nullable();

@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DownloadLinkRequest;
+use App\Mail\SendDownloadLinkEmail;
 use App\Models\Download;
 use App\Models\File;
 use App\Models\DownloadLink;
 use App\Models\UploadLink;
+use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -75,7 +79,7 @@ class FileDownloadController extends Controller
         return response()->json([]);
     }
 
-    public function createLink(Request $request)
+    public function createLink(DownloadLinkRequest $request)
     {
         $fileIds = $request->file ?? [];
 
@@ -95,7 +99,7 @@ class FileDownloadController extends Controller
         try {
             $downloadLink = DownloadLink::create([
                 'upload_link_id' => $files[0]->upload->uploadLink->id,
-                'query' => $key,
+                'path' => $key,
                 'expire_date' => $expireDate,
             ]);
 
@@ -111,14 +115,42 @@ class FileDownloadController extends Controller
             abort(500);
         }
 
-        session()->flash('downloadUrl', route('user.download', ['key' => $key]));
-        return redirect()->route('user.download', ['key' => $key]);
+        $downloadUrl = route('user.download', ['key' => $key]);
+        $title = 'ダウンロードリンクを新規作成しました';
+        $message = 'ファイルをダウンロードしてもらいたい人に、以下のリンクを教えてあげましょう。';
+
+        $userId = $request->user;
+        $userMessage = $request->message ?? '';
+        if ($userId && $downloadLink) {
+            $toSendUser = User::where('id', $userId)
+                ->select('name', 'email')->first();
+
+            $toName = $toSendUser->name;
+            Mail::to($toSendUser->email)
+                ->send(new SendDownloadLinkEmail(
+                    $toName,
+                    Auth::user()->name,
+                    $userMessage,
+                    $downloadUrl
+                ));
+
+            $message = "{$toName}さんに、リンクを掲載したメールが送信されました。";
+        }
+
+        $request->session()->regenerateToken();
+
+        return redirect()
+            ->route('user.download', ['key' => $key])
+            ->with('url', $downloadUrl)
+            ->with('title', $title)
+            ->with('message', $message)
+            ->with('userMessage', $userMessage);
     }
 
     public function showFiles(string $key)
     {
         // file一覧を取得する
-        $link = UploadLink::with('upload.files')->where('query', $key)->first();
+        $link = UploadLink::with('upload.files')->where('path', $key)->first();
         // upload_link_idに紐付いたレコードかつ有効期銀内のデータのみ取得する
         $downloads = DownloadLink::with('download.file')
             ->where('upload_link_id', $link->id)
@@ -140,7 +172,7 @@ class FileDownloadController extends Controller
     public function showDownload(string $key)
     {
         // file一覧を取得する
-        $link = DownloadLink::with('download.file.upload.uploadLink')->where('query', $key)->first();
+        $link = DownloadLink::with('download.file.upload.uploadLink')->where('path', $key)->first();
         // 有効期限内であればダウンロードできるようにする
         $expireStatus = \ExpireDateUtil::checkExpireDate($link->expire_date);
 
@@ -165,7 +197,7 @@ class FileDownloadController extends Controller
                     $query
                         ->AuthUser($userId)
                         ->orWhereHas('download.downloadLink', function ($query) use ($downloadKey) {
-                            $query->where('query', $downloadKey);
+                            $query->where('path', $downloadKey);
                         });
                 }
             )

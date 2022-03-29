@@ -18,6 +18,9 @@
                     <x-nav-link :href="route('user.create.upload')" :active="request()->routeIs('user.create.upload')">
                         アップロードリンクの作成
                     </x-nav-link>
+                    <x-nav-link :href="route('user.list')" :active="request()->routeIs('user.list')">
+                        ユーザーリスト
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -74,6 +77,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('user.create.upload')" :active="request()->routeIs('user.create.upload')">
                 アップロードリンクの作成
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('user.list')" :active="request()->routeIs('user.list')">
+                ユーザーリスト
             </x-responsive-nav-link>
         </div>
 

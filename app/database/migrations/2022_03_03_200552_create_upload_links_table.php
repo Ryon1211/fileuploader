@@ -19,8 +19,8 @@ class CreateUploadLinksTable extends Migration
                 ->constrained()
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
-            $table->string('query');
-            $table->text('message')->nullable();
+            $table->string('path');
+            $table->text('title')->nullable();
             $table->dateTime('expire_date')->nullable();
             $table->timestamp('created_at');
             $table->timestamp('deleted_at')->nullable();

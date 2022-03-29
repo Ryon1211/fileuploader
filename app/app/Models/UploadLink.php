@@ -14,8 +14,8 @@ class UploadLink extends Model
 
     protected $fillable = [
         'user_id',
-        'query',
-        'message',
+        'path',
+        'title',
         'expire_date',
     ];
 
@@ -30,7 +30,7 @@ class UploadLink extends Model
         $keywords = preg_split('/[\s]+/', $convertKeyword, -1, PREG_SPLIT_NO_EMPTY);
 
         foreach ($keywords as $word) {
-            $query->where('upload_links.message', 'like', "%$word%");
+            $query->where('upload_links.title', 'like', "%$word%");
         }
     }
 
@@ -43,9 +43,9 @@ class UploadLink extends Model
         }
 
         if ($order === 'title_asc') {
-            $query->orderBy('message');
+            $query->orderBy('title');
         } elseif ($order === 'title_desc') {
-            $query->orderByDesc('message');
+            $query->orderByDesc('title');
         }
 
         if ($order === 'status_asc') {
