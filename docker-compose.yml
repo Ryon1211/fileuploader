@@ -6,7 +6,7 @@ services:
     expose:
       - 9000
     volumes:
-      - ./app:/www
+      - ./app:/www:cached
     depends_on:
       - db
 
@@ -16,7 +16,7 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - ./app:/www
+      - ./app:/www:cached
     depends_on:
       - app
 

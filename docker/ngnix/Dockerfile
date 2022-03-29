@@ -10,8 +10,6 @@ RUN apt-get update && apt-get install -y \
   rm -rf /var/lib/apt/lists/*
 
 COPY ./default.conf /etc/nginx/nginx.conf
-COPY ./ssl/server.key /etc/ssl/server.key
-COPY ./ssl/server.crt /etc/ssl/server.crt
 
 # workerユーザーをnginxにする
 RUN touch /var/run/nginx.pid && \
