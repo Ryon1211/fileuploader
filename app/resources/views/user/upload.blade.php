@@ -83,7 +83,7 @@
                         function conversionByteToMegabyte(intBytes){
                             let mbytesVal = intBytes / (1024 ** 2);
                             return 1 < mbytesVal
-                                ?　Math.floor(mbytesVal)
+                                ? Math.floor(mbytesVal)
                                 : mbytesVal.toFixed(2);
                         }
 
