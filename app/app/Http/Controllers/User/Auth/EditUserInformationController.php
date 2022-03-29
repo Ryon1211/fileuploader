@@ -40,6 +40,8 @@ class EditUserInformationController extends Controller
 
         $user->save();
 
+        $request->session()->regenerateToken();
+
         return redirect()
             ->route('user.account', ['id' => $id])
             ->with('message', 'アカウント情報を更新しました');

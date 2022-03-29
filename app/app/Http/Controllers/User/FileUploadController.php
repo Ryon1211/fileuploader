@@ -60,6 +60,8 @@ class FileUploadController extends Controller
             $message = "{$toName}さんに、リンクを掲載したメールが送信されました。";
         }
 
+        $request->session()->regenerateToken();
+
         return redirect()
             ->route('user.create.upload')
             ->with('options', \DateOptionsConstants::EXPIRE_OPTIONS)
@@ -131,6 +133,8 @@ class FileUploadController extends Controller
             DB::rollBack();
             abort(500);
         }
+
+        $request->session()->regenerateToken();
 
         return redirect()->route('user.upload', ['key' => $key]);
     }

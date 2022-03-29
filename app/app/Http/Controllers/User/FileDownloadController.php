@@ -137,6 +137,8 @@ class FileDownloadController extends Controller
             $message = "{$toName}さんに、リンクを掲載したメールが送信されました。";
         }
 
+        $request->session()->regenerateToken();
+
         return redirect()
             ->route('user.download', ['key' => $key])
             ->with('url', $downloadUrl)
