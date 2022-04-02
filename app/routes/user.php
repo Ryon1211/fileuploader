@@ -11,6 +11,7 @@ use App\Http\Controllers\User\Auth\RegisteredUserController;
 use App\Http\Controllers\User\Auth\VerifyEmailController;
 use App\Http\Controllers\User\DashboardController;
 use App\Http\Controllers\User\DeleteController;
+use App\Http\Controllers\User\FavoriteController;
 use App\Http\Controllers\User\FileUploadController;
 use App\Http\Controllers\User\FileDownloadController;
 use App\Http\Controllers\User\ListController;
@@ -78,6 +79,12 @@ Route::group(['middleware' => 'auth:users'], function () {
 
     Route::post('/list/search/registered', [ListController::class, 'registeredUserSearch'])
         ->name('list.search.registered');
+
+    Route::get('/favorite', [FavoriteController::class, 'index'])
+        ->name('favorite');
+
+    Route::post('/favorite/register', [FavoriteController::class, 'register'])
+        ->name('favorite.register');
 });
 
 Route::get('/upload/{key}', [FileUploadController::class, 'showUploadForm'])
