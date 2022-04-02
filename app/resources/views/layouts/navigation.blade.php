@@ -21,6 +21,9 @@
                     <x-nav-link :href="route('user.list')" :active="request()->routeIs('user.list')">
                         ユーザーリスト
                     </x-nav-link>
+                    <x-nav-link :href="route('user.favorite')" :active="request()->routeIs('user.favorite')">
+                        お気に入り
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -80,6 +83,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('user.list')" :active="request()->routeIs('user.list')">
                 ユーザーリスト
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('user.favorite')" :active="request()->routeIs('user.favorite')">
+                お気に入り
             </x-responsive-nav-link>
         </div>
 
