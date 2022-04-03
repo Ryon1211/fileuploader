@@ -80,9 +80,6 @@ Route::group(['middleware' => 'auth:users'], function () {
     Route::post('/list/search/registered', [ListController::class, 'registeredUserSearch'])
         ->name('list.search.registered');
 
-    Route::get('/favorite', [FavoriteController::class, 'index'])
-        ->name('favorite');
-
     Route::post('/favorite/register', [FavoriteController::class, 'register'])
         ->name('favorite.register');
 });
