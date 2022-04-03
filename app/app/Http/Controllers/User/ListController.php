@@ -35,9 +35,10 @@ class ListController extends Controller
         $json = json_decode($content, true) ?? [];
         $userId = $json['id'] ?? [];
 
-        $list = MyList::where('registered_user_id', $userId)->first();
+        $list = MyList::where('registered_user_id', $userId)
+            ->where('user_id', Auth::user()->id)->first();
 
-        if ($list && $list->user_id === Auth::user()->id) {
+        if ($list) {
             $list->delete();
         } else {
             MyList::create([
