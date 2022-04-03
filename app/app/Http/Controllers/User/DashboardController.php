@@ -33,8 +33,12 @@ class DashboardController extends Controller
 
             $files->appends(\QueryParamsUtil::appendQueryParams($request));
         } else {
-            $uploadLinks = Link::where('user_id', Auth::user()->id)
+            $uploadLinks = Link::where('upload_links.user_id', Auth::user()->id)
                 ->leftJoin('uploads', 'upload_links.id', '=', 'uploads.upload_link_id')
+                ->leftJoin('favorites', function ($join) {
+                    $join->on('upload_links.id', '=', 'favorites.upload_link_id')
+                        ->where('favorites.user_id', Auth::user()->id);
+                })
                 ->select(
                     'upload_links.id',
                     'upload_links.path',
@@ -42,7 +46,8 @@ class DashboardController extends Controller
                     'upload_links.created_at',
                     'upload_links.expire_date',
                     'uploads.id as upload_id',
-                    'uploads.expire_date as file_expire_date'
+                    'uploads.expire_date as file_expire_date',
+                    'favorites.id as favorite_id'
                 )
                 ->searchKeyword($request->search)
                 ->sortOrder($request->orderby)

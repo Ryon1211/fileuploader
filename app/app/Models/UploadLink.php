@@ -71,5 +71,11 @@ class UploadLink extends Model
         } elseif ($order === 'expire_desc') {
             $query->orderByDesc('expire_date');
         }
+
+        if ($order === 'favorite_asc') {
+            $query->orderBy('favorites.id');
+        } elseif ($order === 'favorite_desc') {
+            $query->orderByDesc('favorites.id');
+        }
     }
 }
