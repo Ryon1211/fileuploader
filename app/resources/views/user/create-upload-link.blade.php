@@ -18,7 +18,7 @@
                 <div class="p-6 bg-white border-b border-gray-200">
                     <!-- Validation Errors -->
                     <x-auth-validation-errors class="mb-4" :errors="$errors" />
-                    <form method="POST" action="{{ route('user.create.upload') }}">
+                    <form id="submit_form" method="POST" action="{{ route('user.create.upload') }}">
                         @csrf
                         <div class="mb-2">
                             <x-user-list-search></x-user-list-search>
@@ -72,6 +72,7 @@
     let selectedUser = document.querySelector('#selected_user');
     let messageArea = document.querySelector('#message_area');
     let userDeleteBtn = document.querySelector('#user_delete_btn');
+    let submitForm = document.querySelector('#submit_form');
 
     function classListToggle(target, classNames){
             classNames.forEach(className => {
@@ -214,6 +215,9 @@
                 },5000);
     }
 
-
+    submitForm.addEventListener('submit', () => {
+        classListToggle(loadWrap, ['invisible']);
+        submitBtn.disabled = true;
+    });
     </script>
 </x-app-layout>

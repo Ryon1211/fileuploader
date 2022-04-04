@@ -114,6 +114,7 @@
 
                             form.addEventListener('submit', () => {
                                 loadWrap.classList.remove('invisible');
+                                submitBtn.disabled = true;
                             })
                         });
                     </script>
