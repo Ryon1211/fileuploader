@@ -70,7 +70,6 @@
                             <div class="w-2/12 ml-3">
                                 <x-upload-status
                                 class="upload-detail-btn"
-                                :href="route('user.show.files', ['key' => $upload_link->path])"
                                 :uploadLink="$upload_link"></x-upload-status>
                             </div>
                             <div class="w-3/12 mx-2 break-words"> {{ $upload_link->title }}</div>
