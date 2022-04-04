@@ -37,7 +37,7 @@
                                 <svg class="h-3 w-3 text-gray-400"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round">  <line x1="12" y1="5" x2="12" y2="19" />  <polyline points="19 12 12 19 5 12" /></svg>
                             </span>
                         </div>
-                        <div class="sort-btn w-4/12 mx-2 flex justify-center items-center cursor-pointer" data-sort="title">
+                        <div class="sort-btn w-3/12 mx-2 flex justify-center items-center cursor-pointer" data-sort="title">
                             リンクタイトル
                             <span class="order-arrow hidden ml-2 transform origin-center">
                                 <svg class="h-3 w-3 text-gray-400"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round">  <line x1="12" y1="5" x2="12" y2="19" />  <polyline points="19 12 12 19 5 12" /></svg>
@@ -55,6 +55,12 @@
                                 <svg class="h-3 w-3 text-gray-400"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round">  <line x1="12" y1="5" x2="12" y2="19" />  <polyline points="19 12 12 19 5 12" /></svg>
                             </span>
                         </div>
+                        <div class="sort-btn w-1/12 flex justify-center items-center cursor-pointer" data-sort="favorite">
+                            お気入り
+                            <span class="order-arrow hidden ml-2 transform origin-center">
+                                <svg class="h-3 w-3 text-gray-400"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round">  <line x1="12" y1="5" x2="12" y2="19" />  <polyline points="19 12 12 19 5 12" /></svg>
+                            </span>
+                        </div>
                         <div class="w-1/12 text-center">リンク</div>
                         <div class="w-1/12 text-center">削除</div>
                     </div>
@@ -67,9 +73,13 @@
                                 :href="route('user.show.files', ['key' => $upload_link->path])"
                                 :uploadLink="$upload_link"></x-upload-status>
                             </div>
-                            <div class="w-4/12 mx-2 break-words"> {{ $upload_link->title }}</div>
+                            <div class="w-3/12 mx-2 break-words"> {{ $upload_link->title }}</div>
                             <div class="w-2/12 text-center"> {{ $upload_link->created_at }}</div>
                             <div class="w-2/12 text-center"> {{ $upload_link->expire_date ?? '期限なし' }}</div>
+                            <div class="w-1/12 text-center">
+                                <x-favorite-button :linkId="$upload_link->id" :favoriteId="$upload_link->favorite_id">
+                                </x-favorite-button>
+                            </div>
                             <div class="w-1/12 text-center">
                                 @if(\ExpireDateUtil::checkExpireDate($upload_link->expire_date) && !$upload_link->upload_id)
                                 <x-link-button type="button" class="copy-btn" data-src="{{ route('user.upload', ['key' => $upload_link->path]) }}"></x-link-button>
@@ -166,6 +176,7 @@
         let errorWrapSession = document.querySelector('#error_wrap_session');
         let confirmWrap = document.querySelector('#confirm_wrap');
         let errorMessage = document.querySelector('#error_message');
+        let favoriteBtns = document.querySelectorAll('.favorite_btn');
 
         function sendForm(url, fileIds, method='post'){
             const form = document.createElement('form');
@@ -204,6 +215,20 @@
                     : await error.response.data.message;
             }
             errorMsgElm.innerText = text;
+        }
+
+        function toggleFavoriteStar(favoriteStar, favoriteStarLine, btn){
+            if(btn.dataset.favoriteStatus === 'true'){
+                favoriteStar.setAttribute('fill', 'rgba(251, 191, 36, var(--tw-text-opacity))');
+                favoriteStarLine.classList.remove('text-gray-300');
+                favoriteStarLine.classList.add('text-yellow-400');
+            }
+
+            if(btn.dataset.favoriteStatus === 'false'){
+                favoriteStar.setAttribute('fill', 'rgba(255, 255, 255, var(--tw-text-opacity))');
+                favoriteStarLine.classList.add('text-gray-300');
+                favoriteStarLine.classList.remove('text-yellow-400');
+            }
         }
 
         const route = '{{ route('user.dashboard') }}';
@@ -300,6 +325,39 @@
             })
             .finally(() => classListToggle(loadWrap, ['invisible']));
         }));
+
+        favoriteBtns.forEach(btn =>{
+            let favoriteStar = btn.querySelector('.favorite_star');
+            let favoriteStarLine = btn.querySelector('.favorite_star_line');
+            toggleFavoriteStar(favoriteStar, favoriteStarLine, btn);
+
+            btn.addEventListener('click', () => {
+                let linkId = btn.dataset.linkId;
+                let status = btn.dataset.favoriteStatus;
+
+                window.axios({
+                    url: '{{ route('user.favorite.register') }}',
+                    method: 'post',
+                    dataType: 'json',
+                    data: JSON.stringify({
+                        id: linkId,
+                    }),
+                })
+                .then(response => {
+                    btn.dataset.favoriteStatus = status === 'true' ? 'false' : 'true';
+                    toggleFavoriteStar(favoriteStar, favoriteStarLine, btn);
+
+                })
+                .catch(async error => {
+                    classListToggle(errorWrap, ['invisible']);
+
+                    await showErrorMessage(error, errorMessage);
+                    setTimeout(() =>{
+                        classListToggle(errorWrap, ['invisible']);
+                    },5000);
+                })
+            });
+        });
 
         deleteBtns.forEach(btn => {
             btn.addEventListener('click', e => {
